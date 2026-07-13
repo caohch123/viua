@@ -23,7 +23,7 @@
 
 - `image 0.24` — 图片解码、缩放
 - `clap 4.4` — 命令行参数（源自 viu）
-- `crossterm 0.27` — 终端 ANSI truecolor 输出（源自 shoalart）
+- `crossterm 0.27` — 终端 ANSI truecolor 输出
 
 ### 用法
 
