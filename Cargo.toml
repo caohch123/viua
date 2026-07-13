@@ -1,5 +1,5 @@
 [package]
-name = "viuva"
+name = "viua"
 version = "0.1.0"
 edition = "2021"
 description = "Convert images to ASCII art in the terminal"
