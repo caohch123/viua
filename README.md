@@ -1,4 +1,4 @@
-## asciiart — 终端 ASCII 画生成器
+## viuva — 终端 ASCII 画生成器
 
 一个 Rust 命令行工具，将图片转换为 **彩色/单色 ASCII 字符画** 直接输出到终端。
 
