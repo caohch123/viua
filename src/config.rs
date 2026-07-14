@@ -8,6 +8,8 @@ pub struct Config {
     pub charset: String,
     pub name: bool,
     pub caption: bool,
+    pub output: Option<String>,
+    pub html: Option<String>,
 }
 
 impl Config {
@@ -27,6 +29,8 @@ impl Config {
             .unwrap_or_default();
         let name = matches.get_flag("name");
         let caption = matches.get_flag("caption");
+        let output = matches.get_one::<String>("output").cloned();
+        let html = matches.get_one::<String>("html").cloned();
 
         Config {
             files,
@@ -36,6 +40,8 @@ impl Config {
             charset,
             name,
             caption,
+            output,
+            html,
         }
     }
 
@@ -49,6 +55,8 @@ impl Config {
             charset: String::new(),
             name: false,
             caption: false,
+            output: None,
+            html: None,
         }
     }
 }

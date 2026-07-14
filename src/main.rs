@@ -6,8 +6,9 @@ mod render;
 use ascii::convert;
 use clap::{crate_description, crate_name, crate_version, value_parser, Arg, ArgAction, Command};
 use config::Config;
-use render::render;
-use std::io::stdout;
+use render::{render, render_html};
+use std::fs::File;
+use std::io::{stdout, BufWriter};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = Command::new(crate_name!())
@@ -62,6 +63,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .action(ArgAction::SetTrue)
                 .help("Print filename after each image"),
         )
+        .arg(
+            Arg::new("output")
+                .short('o')
+                .long("output")
+                .value_name("FILE")
+                .help("Save ASCII art as plain text to FILE"),
+        )
+        .arg(
+            Arg::new("html")
+                .long("html")
+                .value_name("FILE")
+                .help("Save ASCII art as colored HTML to FILE"),
+        )
         .get_matches();
 
     let conf = Config::new(&matches);
@@ -80,7 +94,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}:", file);
         }
         let art = convert(&img, conf.width, &char_set);
+
+        // Output to stdout (terminal)
         render(&mut out, &art, conf.color, conf.monochrome)?;
+
+        // Save as plain text if -o is specified
+        if let Some(ref path) = conf.output {
+            let f = File::create(path)?;
+            let mut writer = BufWriter::new(f);
+            render(&mut writer, &art, false, true)?;
+        }
+
+        // Save as HTML if --html is specified
+        if let Some(ref path) = conf.html {
+            let f = File::create(path)?;
+            let mut writer = BufWriter::new(f);
+            render_html(&mut writer, &art, file)?;
+        }
+
         if conf.caption {
             println!("{}", file);
         }
