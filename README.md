@@ -29,12 +29,17 @@ asciiart/
 | `-s, --charset` | 自定义字符集（默认 ` .:-=+*#%@`） |
 | `-n, --name` | 输出前打印文件名 |
 | `-t, --caption` | 输出后打印文件名 |
+| `-o, --output` | 将 ASCII 艺术保存为纯文本文件 |
+| `--html` | 将 ASCII 艺术保存为彩色 HTML 文件 |
 
 **使用示例：**
 ```bash
 cargo run -- image.jpg                              # 基础 ASCII
 cargo run -- -w 120 -c image.png                    # 宽120 + 彩色
 cargo run -- -s " .-+*#" --color image.png          # 自定义字符集
+cargo run -- -c -o output.txt image.jpg             # 彩色 + 保存为纯文本
+cargo run -- -c --html output.html image.png        # 彩色 + 保存为 HTML
+cargo run -- -c image1.jpg image2.png               # 批量处理多个文件
 ```
 **效果图：**
 <img width="1550" height="1572" alt="435b97b0dcc56f0dc46db3bb990593b6" src="https://github.com/user-attachments/assets/98780d8f-3ee2-4142-b6e8-c634496a132a" />
