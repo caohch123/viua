@@ -5,7 +5,7 @@
 
 **项目结构：**
 ```
-asciiart/
+viua/
 ├── Cargo.toml
 └── src/
     ├── main.rs      # CLI 入口 (clap 参数解析)
