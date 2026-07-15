@@ -61,3 +61,65 @@ pub fn build_cli() -> Command {
     //         .help("Save ASCII art as colored HTML to FILE"),
     // )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(args: &[&str]) -> clap::ArgMatches {
+        build_cli().try_get_matches_from(args).unwrap()
+    }
+
+    #[test]
+    fn test_default_width() {
+        let m = parse(&["viua", "img.png"]);
+        assert_eq!(*m.get_one::<u32>("width").unwrap(), 0);
+    }
+
+    #[test]
+    fn test_width_flag() {
+        let m = parse(&["viua", "-w", "60", "img.png"]);
+        assert_eq!(*m.get_one::<u32>("width").unwrap(), 60);
+    }
+
+    #[test]
+    fn test_default_mode() {
+        let m = parse(&["viua", "img.png"]);
+        assert_eq!(m.get_one::<String>("mode").unwrap(), "image");
+    }
+
+    #[test]
+    fn test_mode_ascii() {
+        let m = parse(&["viua", "-M", "ascii", "img.png"]);
+        assert_eq!(m.get_one::<String>("mode").unwrap(), "ascii");
+    }
+
+    #[test]
+    fn test_mode_halfblock() {
+        let m = parse(&["viua", "-M", "halfblock", "img.png"]);
+        assert_eq!(m.get_one::<String>("mode").unwrap(), "halfblock");
+    }
+
+    #[test]
+    fn test_monochrome_flag() {
+        let m = parse(&["viua", "-m", "img.png"]);
+        assert!(m.get_flag("monochrome"));
+    }
+
+    #[test]
+    fn test_info_flag() {
+        let m = parse(&["viua", "-i", "img.png"]);
+        assert!(m.get_flag("info"));
+    }
+
+    #[test]
+    fn test_multiple_files() {
+        let m = parse(&["viua", "a.png", "b.png", "c.jpg"]);
+        let files: Vec<&str> = m
+            .get_many::<String>("file")
+            .unwrap()
+            .map(|s| s.as_str())
+            .collect();
+        assert_eq!(files, vec!["a.png", "b.png", "c.jpg"]);
+    }
+}

@@ -192,3 +192,37 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_human_size_zero() {
+        assert_eq!(human_size(0), "0 B");
+    }
+
+    #[test]
+    fn test_human_size_bytes() {
+        assert_eq!(human_size(1), "1 B");
+        assert_eq!(human_size(1023), "1023 B");
+    }
+
+    #[test]
+    fn test_human_size_kilobytes() {
+        assert_eq!(human_size(1024), "1.0 KB");
+        assert_eq!(human_size(1536), "1.5 KB");
+        assert_eq!(human_size(1024 * 100), "100.0 KB");
+    }
+
+    #[test]
+    fn test_human_size_megabytes() {
+        assert_eq!(human_size(1024 * 1024), "1.0 MB");
+        assert_eq!(human_size(1024 * 1024 * 5), "5.0 MB");
+    }
+
+    #[test]
+    fn test_human_size_gigabytes() {
+        assert_eq!(human_size(1024 * 1024 * 1024), "1.0 GB");
+    }
+}

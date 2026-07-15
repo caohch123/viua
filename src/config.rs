@@ -65,3 +65,60 @@ impl Config {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cli;
+
+    fn parse_config(args: &[&str]) -> Config {
+        let matches = cli::build_cli().try_get_matches_from(args).unwrap();
+        Config::new(&matches)
+    }
+
+    #[test]
+    fn test_defaults() {
+        let conf = parse_config(&["viua", "img.png"]);
+        assert!(matches!(conf.mode, ViewMode::Image));
+        assert_eq!(conf.width, 0);
+        assert!(!conf.monochrome);
+        assert!(!conf.info);
+        assert_eq!(conf.charset, " .:-=+*#%@");
+    }
+
+    #[test]
+    fn test_mode_ascii() {
+        let conf = parse_config(&["viua", "-M", "ascii", "img.png"]);
+        assert!(matches!(conf.mode, ViewMode::Ascii));
+    }
+
+    #[test]
+    fn test_mode_halfblock() {
+        let conf = parse_config(&["viua", "-M", "halfblock", "img.png"]);
+        assert!(matches!(conf.mode, ViewMode::HalfBlock));
+    }
+
+    #[test]
+    fn test_monochrome() {
+        let conf = parse_config(&["viua", "-m", "img.png"]);
+        assert!(conf.monochrome);
+    }
+
+    #[test]
+    fn test_info() {
+        let conf = parse_config(&["viua", "-i", "img.png"]);
+        assert!(conf.info);
+    }
+
+    #[test]
+    fn test_width_custom() {
+        let conf = parse_config(&["viua", "-w", "60", "img.png"]);
+        assert_eq!(conf.width, 60);
+    }
+
+    #[test]
+    fn test_charset_custom() {
+        let conf = parse_config(&["viua", "-s", " .-+#", "img.png"]);
+        assert_eq!(conf.charset, " .-+#");
+    }
+}

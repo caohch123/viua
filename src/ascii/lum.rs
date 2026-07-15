@@ -29,3 +29,47 @@ pub fn convert(img: &DynamicImage, new_width: u32, char_set: &[char]) -> AsciiAr
 
     AsciiArt { lines }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use image::{Rgba, RgbaImage};
+
+    fn test_charset() -> Vec<char> {
+        " .:-=+*#%@".chars().collect()
+    }
+
+    #[test]
+    fn test_convert_output_dimensions() {
+        let img = DynamicImage::ImageRgba8(RgbaImage::new(100, 100));
+        let art = convert(&img, 50, &test_charset());
+        assert_eq!(art.lines.len(), 25);
+        assert_eq!(art.lines[0].len(), 50);
+    }
+
+    #[test]
+    fn test_convert_black_to_first_char() {
+        let img = DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, Rgba([0, 0, 0, 255])));
+        let art = convert(&img, 10, &test_charset());
+        assert_eq!(art.lines[0][0].char, ' ');
+    }
+
+    #[test]
+    fn test_convert_white_to_last_char() {
+        let img =
+            DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, Rgba([255, 255, 255, 255])));
+        let art = convert(&img, 10, &test_charset());
+        assert_eq!(art.lines[0][0].char, '@');
+    }
+
+    #[test]
+    fn test_convert_preserves_rgb() {
+        let img =
+            DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, Rgba([100, 150, 200, 255])));
+        let art = convert(&img, 10, &test_charset());
+        let p = &art.lines[0][0];
+        assert_eq!(p.r, 100);
+        assert_eq!(p.g, 150);
+        assert_eq!(p.b, 200);
+    }
+}
