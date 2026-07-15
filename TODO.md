@@ -2,20 +2,18 @@
 
 ## Done
 
-- [x] 宽度校验 · --mode · stdin 管道 · 信息页脚 · 内联定位
-- [x] --monochrome · 分隔线 · 文件不存在提示
-- [x] 单元测试 29 tests · 代码清理
+- [x] **宽度校验** — 图片宽度 > 终端宽度时警告或自动裁剪
+- [x] **--mode 参数** — ascii / image / halfblock
+- [x] **stdin 管道** — 检测管道输入，追加文件列表
+- [x] **图片信息页脚** — 居中框体（文件名·尺寸·格式·大小）；ASCII 署名
+- [x] **图片内联定位** — viuer absolute_offset: false
+- [x] **--monochrome 全模式支持** — ASCII/Image/HalfBlock 灰度
+- [x] **分隔线** — 多图之间 `─` 填充终端宽度
+- [x] **文件不存在友好提示** — warning + skip
+- [x] **单元测试** — 29 tests（human_size / charset / lum / ansi / cli / config）
+- [x] **代码清理** — 抽 viuer_print() 消除重复；删 ensure_iterm_detection 死代码
 
-## Near Term
+## Pending
 
 - [ ] **--algorithm 参数** — lum / shape 算法切换
-- [ ] **win glob 展开** — Windows 不自展 `*.png`
-- [ ] **--height 参数** — 与 --width 对称
-
-## Backlog
-
-- [ ] **GIF 动图播放** — viuer 原生支持，加帧循环
-- [ ] **递归目录** `-r` — 直接传入文件夹
-- [ ] **URL 输入** — `viua https://...` 下载并显示
-- [ ] **集成测试** — e2e golden test
-- [ ] **CI/CD** — GitHub Actions auto test + lint
+- [ ] **win glob 展开** — Windows cmd/pwsh 不自展 `*.png`
