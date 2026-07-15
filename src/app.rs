@@ -95,6 +95,11 @@ fn print_footer(
     println!("╰{}╯", fill);
 }
 
+fn print_separator() {
+    let term_w = size().map(|(w, _)| w as usize).unwrap_or(80);
+    println!("{}", "─".repeat(term_w));
+}
+
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     let actual_width = resolve_width(conf);
     ensure_iterm_detection();
@@ -113,7 +118,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
     };
     assert!(!char_set.is_empty(), "Charset must not be empty");
 
-    for file in files {
+    for (i, file) in files.iter().enumerate() {
         let mut img = image::open(file)?;
         let (orig_w, orig_h) = img.dimensions();
         let file_size = std::fs::metadata(file).map(|m| m.len()).unwrap_or(0);
@@ -169,6 +174,9 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
         }
 
         print_footer(file, orig_w, orig_h, &fmt, file_size, conf.info, is_ascii);
+        if i < files.len() - 1 {
+            print_separator();
+        }
         println!();
     }
 
