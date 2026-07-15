@@ -114,7 +114,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
     assert!(!char_set.is_empty(), "Charset must not be empty");
 
     for file in files {
-        let img = image::open(file)?;
+        let mut img = image::open(file)?;
         let (orig_w, orig_h) = img.dimensions();
         let file_size = std::fs::metadata(file).map(|m| m.len()).unwrap_or(0);
         let fmt = std::path::Path::new(file)
@@ -124,46 +124,52 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
             .unwrap_or_default();
         let is_ascii = matches!(conf.mode, ViewMode::Ascii);
 
+        if conf.monochrome {
+            img = img.grayscale();
+        }
+
         match conf.mode {
             ViewMode::Ascii => {
                 let art = ascii::convert(&img, actual_width, &char_set, Algorithm::Luminance);
                 let renderer = Ansi {
-                    color: conf.color,
+                    color: !conf.monochrome,
                     monochrome: conf.monochrome,
                 };
                 renderer.render(&mut stdout(), &art)?;
             }
             ViewMode::Image => {
                 let vcfg = viuer::Config {
-                    width: if conf.width == 0 {
-                        None
-                    } else {
-                        Some(actual_width)
-                    },
+                    width: Some(actual_width),
                     transparent: true,
                     absolute_offset: false,
                     ..Default::default()
                 };
-                viuer::print_from_file(file, &vcfg)?;
+                if conf.monochrome {
+                    viuer::print(&img, &vcfg)?;
+                } else {
+                    viuer::print_from_file(file, &vcfg)?;
+                }
             }
             ViewMode::HalfBlock => {
                 let vcfg = viuer::Config {
-                    width: if conf.width == 0 {
-                        None
-                    } else {
-                        Some(actual_width)
-                    },
+                    width: Some(actual_width),
                     use_kitty: false,
                     use_iterm: false,
+                    use_sixel: false,
                     transparent: true,
                     absolute_offset: false,
                     ..Default::default()
                 };
-                viuer::print_from_file(file, &vcfg)?;
+                if conf.monochrome {
+                    viuer::print(&img, &vcfg)?;
+                } else {
+                    viuer::print_from_file(file, &vcfg)?;
+                }
             }
         }
 
         print_footer(file, orig_w, orig_h, &fmt, file_size, conf.info, is_ascii);
+        println!();
     }
 
     Ok(())

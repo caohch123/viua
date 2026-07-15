@@ -19,18 +19,11 @@ pub fn build_cli() -> Command {
                 .help("Output width in characters (0 = auto, fit terminal)"),
         )
         .arg(
-            Arg::new("color")
-                .short('c')
-                .long("color")
-                .action(ArgAction::SetTrue)
-                .help("Output with ANSI truecolor"),
-        )
-        .arg(
             Arg::new("monochrome")
                 .short('m')
                 .long("monochrome")
                 .action(ArgAction::SetTrue)
-                .help("Force monochrome output even with --color"),
+                .help("Force monochrome output"),
         )
         .arg(
             Arg::new("charset")

@@ -14,7 +14,6 @@ pub struct Config {
     #[allow(dead_code)]
     pub algorithm: Algorithm,
     pub width: u32,
-    pub color: bool,
     pub monochrome: bool,
     pub charset: String,
     pub info: bool,
@@ -25,7 +24,6 @@ pub struct Config {
 impl Config {
     pub fn new(matches: &ArgMatches) -> Self {
         let width = *matches.get_one::<u32>("width").expect("width has default");
-        let color = matches.get_flag("color");
         let monochrome = matches.get_flag("monochrome");
         let charset = matches
             .get_one::<String>("charset")
@@ -48,7 +46,6 @@ impl Config {
             mode,
             algorithm: Algorithm::Luminance,
             width,
-            color,
             monochrome,
             charset,
             info,
@@ -62,7 +59,6 @@ impl Config {
             mode: ViewMode::Ascii,
             algorithm: Algorithm::Luminance,
             width: 80,
-            color: false,
             monochrome: false,
             charset: String::new(),
             info: false,
