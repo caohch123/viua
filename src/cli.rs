@@ -40,18 +40,11 @@ pub fn build_cli() -> Command {
                 .help("Characters used for ASCII art (dark to light)"),
         )
         .arg(
-            Arg::new("name")
-                .short('n')
-                .long("name")
+            Arg::new("info")
+                .short('i')
+                .long("info")
                 .action(ArgAction::SetTrue)
-                .help("Print filename before each image"),
-        )
-        .arg(
-            Arg::new("caption")
-                .short('t')
-                .long("caption")
-                .action(ArgAction::SetTrue)
-                .help("Print filename after each image"),
+                .help("Show file info footer after each image"),
         )
         .arg(
             Arg::new("mode")

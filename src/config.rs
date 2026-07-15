@@ -17,8 +17,7 @@ pub struct Config {
     pub color: bool,
     pub monochrome: bool,
     pub charset: String,
-    pub name: bool,
-    pub caption: bool,
+    pub info: bool,
     // pub output: Option<String>,
     // pub html: Option<String>,
 }
@@ -32,8 +31,7 @@ impl Config {
             .get_one::<String>("charset")
             .cloned()
             .unwrap_or_default();
-        let name = matches.get_flag("name");
-        let caption = matches.get_flag("caption");
+        let info = matches.get_flag("info");
         let mode = match matches
             .get_one::<String>("mode")
             .map(|s| s.as_str())
@@ -53,8 +51,7 @@ impl Config {
             color,
             monochrome,
             charset,
-            name,
-            caption,
+            info,
         }
     }
 
@@ -68,8 +65,7 @@ impl Config {
             color: false,
             monochrome: false,
             charset: String::new(),
-            name: false,
-            caption: false,
+            info: false,
         }
     }
 }
