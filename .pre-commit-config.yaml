@@ -4,9 +4,13 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^img/
       - id: end-of-file-fixer
+        exclude: ^img/
       - id: check-yaml
+        exclude: ^img/
       - id: check-added-large-files
+        exclude: ^img/
 
   - repo: local
     hooks:

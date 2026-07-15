@@ -53,6 +53,14 @@ pub fn build_cli() -> Command {
                 .action(ArgAction::SetTrue)
                 .help("Print filename after each image"),
         )
+        .arg(
+            Arg::new("mode")
+                .short('M')
+                .long("mode")
+                .default_value("image")
+                .value_parser(["ascii", "image", "halfblock"])
+                .help("Render mode: ascii, image, or halfblock"),
+        )
     // .arg(
     //     Arg::new("output")
     //         .short('o')

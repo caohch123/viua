@@ -2,7 +2,6 @@ use clap::ArgMatches;
 
 use crate::ascii::Algorithm;
 
-#[allow(dead_code)]
 pub enum ViewMode {
     Ascii,
     Image,
@@ -34,11 +33,20 @@ impl Config {
             .unwrap_or_default();
         let name = matches.get_flag("name");
         let caption = matches.get_flag("caption");
+        let mode = match matches
+            .get_one::<String>("mode")
+            .map(|s| s.as_str())
+            .unwrap_or("image")
+        {
+            "halfblock" => ViewMode::HalfBlock,
+            "ascii" => ViewMode::Ascii,
+            _ => ViewMode::Image,
+        };
         // let output = matches.get_one::<String>("output").cloned();
         // let html = matches.get_one::<String>("html").cloned();
 
         Config {
-            mode: ViewMode::Ascii,
+            mode,
             algorithm: Algorithm::Luminance,
             width,
             color,

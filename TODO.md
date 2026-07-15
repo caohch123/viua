@@ -3,7 +3,7 @@
 ## High Priority
 
 - [x] **宽度校验** — 图片宽度 > 终端宽度时警告或自动裁剪，防止折行
-- [ ] **--mode 参数** — 支持 ascii / image / halfblock 三种模式
+- [x] **--mode 参数** — 支持 ascii / image / halfblock 三种模式
 - [ ] **stdin 管道** — 检测管道输入，追加文件列表
 
 ## Medium Priority
