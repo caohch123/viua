@@ -23,7 +23,8 @@ pub fn convert(img: &DynamicImage, new_width: u32, char_set: &[char]) -> AsciiAr
         for x in 0..new_width {
             let pixel = resized.get_pixel(x, y);
             let rgb = pixel.to_rgb();
-            let gray = (0.299 * rgb[0] as f64 + 0.587 * rgb[1] as f64 + 0.114 * rgb[2] as f64) as u8;
+            let gray =
+                (0.299 * rgb[0] as f64 + 0.587 * rgb[1] as f64 + 0.114 * rgb[2] as f64) as u8;
             let idx = (gray as usize) * (char_set.len() - 1) / 255;
             let ch = char_set[idx.min(char_set.len() - 1)];
             row.push(AsciiPixel {

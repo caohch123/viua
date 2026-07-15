@@ -1,6 +1,6 @@
 use crate::ascii::AsciiArt;
-use crossterm::style::{Color, Print, ResetColor, SetForegroundColor};
 use crossterm::queue;
+use crossterm::style::{Color, Print, ResetColor, SetForegroundColor};
 use std::io::{Result, Write};
 
 pub fn render<W: Write>(out: &mut W, art: &AsciiArt, color: bool, monochrome: bool) -> Result<()> {
@@ -29,8 +29,14 @@ pub fn render_html<W: Write>(out: &mut W, art: &AsciiArt, title: &str) -> Result
     writeln!(out, "  <meta charset=\"UTF-8\">")?;
     writeln!(out, "  <title>{}</title>", html_escape(title))?;
     writeln!(out, "  <style>")?;
-    writeln!(out, "    body {{ background: #1e1e1e; margin: 0; padding: 1rem; }}")?;
-    writeln!(out, "    pre {{ font-family: monospace; font-size: 12px; line-height: 1.2; }}")?;
+    writeln!(
+        out,
+        "    body {{ background: #1e1e1e; margin: 0; padding: 1rem; }}"
+    )?;
+    writeln!(
+        out,
+        "    pre {{ font-family: monospace; font-size: 12px; line-height: 1.2; }}"
+    )?;
     writeln!(out, "  </style>")?;
     writeln!(out, "</head>")?;
     writeln!(out, "<body><pre>")?;

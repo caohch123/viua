@@ -46,6 +46,7 @@ impl Config {
     }
 
     #[cfg(test)]
+    #[allow(unused)]
     pub fn test_config() -> Self {
         Config {
             files: vec![],
