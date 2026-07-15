@@ -119,7 +119,17 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
     assert!(!char_set.is_empty(), "Charset must not be empty");
 
     for (i, file) in files.iter().enumerate() {
-        let mut img = image::open(file)?;
+        if !std::path::Path::new(file).exists() {
+            eprintln!("warning: file not found — {file}");
+            continue;
+        }
+        let mut img = match image::open(file) {
+            Ok(img) => img,
+            Err(e) => {
+                eprintln!("warning: cannot open {file}: {e}");
+                continue;
+            }
+        };
         let (orig_w, orig_h) = img.dimensions();
         let file_size = std::fs::metadata(file).map(|m| m.len()).unwrap_or(0);
         let fmt = std::path::Path::new(file)
