@@ -1,38 +1,49 @@
-use crate::ascii::convert;
-use crate::charset;
-use crate::config::Config;
-use crate::render::{render, render_html};
-use std::fs::File;
-use std::io::{stdout, BufWriter};
+use crate::ascii::{self, Algorithm};
+use crate::config::{Config, ViewMode};
+use crate::render::{Ansi, Renderer};
+use std::io::stdout;
 
-pub fn run(conf: &Config) -> Result<(), Box<dyn std::error::Error>> {
-    let char_set = if conf.charset.is_empty() {
-        charset::DEFAULT_CHARSET.chars().collect::<Vec<_>>()
+pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let char_set: Vec<char> = if conf.charset.is_empty() {
+        ascii::charset::DEFAULT_CHARSET.chars().collect()
     } else {
-        conf.charset.chars().collect::<Vec<_>>()
+        conf.charset.chars().collect()
     };
     assert!(!char_set.is_empty(), "Charset must not be empty");
 
-    let mut out = stdout();
-    for file in &conf.files {
+    for file in files {
         let img = image::open(file)?;
         if conf.name {
             println!("{}:", file);
         }
-        let art = convert(&img, conf.width, &char_set);
 
-        render(&mut out, &art, conf.color, conf.monochrome)?;
-
-        if let Some(ref path) = conf.output {
-            let f = File::create(path)?;
-            let mut writer = BufWriter::new(f);
-            render(&mut writer, &art, false, true)?;
-        }
-
-        if let Some(ref path) = conf.html {
-            let f = File::create(path)?;
-            let mut writer = BufWriter::new(f);
-            render_html(&mut writer, &art, file)?;
+        match conf.mode {
+            ViewMode::Ascii => {
+                let art = ascii::convert(&img, conf.width, &char_set, Algorithm::Luminance);
+                let renderer = Ansi {
+                    color: conf.color,
+                    monochrome: conf.monochrome,
+                };
+                renderer.render(&mut stdout(), &art)?;
+            }
+            ViewMode::Image => {
+                let vcfg = viuer::Config {
+                    width: Some(conf.width),
+                    transparent: true,
+                    ..Default::default()
+                };
+                viuer::print(&img, &vcfg)?;
+            }
+            ViewMode::HalfBlock => {
+                let vcfg = viuer::Config {
+                    width: Some(conf.width),
+                    use_kitty: false,
+                    use_iterm: false,
+                    transparent: true,
+                    ..Default::default()
+                };
+                viuer::print(&img, &vcfg)?;
+            }
         }
 
         if conf.caption {

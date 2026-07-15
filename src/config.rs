@@ -1,25 +1,30 @@
 use clap::ArgMatches;
 
+use crate::ascii::Algorithm;
+
+#[allow(dead_code)]
+pub enum ViewMode {
+    Ascii,
+    Image,
+    HalfBlock,
+}
+
 pub struct Config {
-    pub files: Vec<String>,
+    pub mode: ViewMode,
+    #[allow(dead_code)]
+    pub algorithm: Algorithm,
     pub width: u32,
     pub color: bool,
     pub monochrome: bool,
     pub charset: String,
     pub name: bool,
     pub caption: bool,
-    pub output: Option<String>,
-    pub html: Option<String>,
+    // pub output: Option<String>,
+    // pub html: Option<String>,
 }
 
 impl Config {
     pub fn new(matches: &ArgMatches) -> Self {
-        let files: Vec<String> = matches
-            .get_many::<String>("file")
-            .unwrap_or_default()
-            .map(|s| s.to_string())
-            .collect();
-
         let width = *matches.get_one::<u32>("width").expect("width has default");
         let color = matches.get_flag("color");
         let monochrome = matches.get_flag("monochrome");
@@ -29,19 +34,18 @@ impl Config {
             .unwrap_or_default();
         let name = matches.get_flag("name");
         let caption = matches.get_flag("caption");
-        let output = matches.get_one::<String>("output").cloned();
-        let html = matches.get_one::<String>("html").cloned();
+        // let output = matches.get_one::<String>("output").cloned();
+        // let html = matches.get_one::<String>("html").cloned();
 
         Config {
-            files,
+            mode: ViewMode::Ascii,
+            algorithm: Algorithm::Luminance,
             width,
             color,
             monochrome,
             charset,
             name,
             caption,
-            output,
-            html,
         }
     }
 
@@ -49,15 +53,14 @@ impl Config {
     #[allow(unused)]
     pub fn test_config() -> Self {
         Config {
-            files: vec![],
+            mode: ViewMode::Ascii,
+            algorithm: Algorithm::Luminance,
             width: 80,
             color: false,
             monochrome: false,
             charset: String::new(),
             name: false,
             caption: false,
-            output: None,
-            html: None,
         }
     }
 }

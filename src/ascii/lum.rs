@@ -1,15 +1,5 @@
+use super::{AsciiArt, AsciiPixel};
 use image::{DynamicImage, GenericImageView, Pixel};
-
-pub struct AsciiPixel {
-    pub char: char,
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-}
-
-pub struct AsciiArt {
-    pub lines: Vec<Vec<AsciiPixel>>,
-}
 
 pub fn convert(img: &DynamicImage, new_width: u32, char_set: &[char]) -> AsciiArt {
     let (w, h) = img.dimensions();
