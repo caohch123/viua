@@ -20,8 +20,25 @@ fn resolve_width(conf: &Config) -> u32 {
     conf.width
 }
 
+fn ensure_iterm_detection() {
+    if std::env::var("TERM_PROGRAM").is_ok() {
+        return;
+    }
+    if std::env::var("WT_SESSION").is_ok() {
+        std::env::set_var("TERM_PROGRAM", "iTerm");
+    }
+}
+
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     let actual_width = resolve_width(conf);
+    ensure_iterm_detection();
+
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "viua: iterm={} sixel={}",
+        viuer::is_iterm_supported(),
+        viuer::is_sixel_supported()
+    );
 
     let char_set: Vec<char> = if conf.charset.is_empty() {
         ascii::charset::DEFAULT_CHARSET.chars().collect()
@@ -31,13 +48,13 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
     assert!(!char_set.is_empty(), "Charset must not be empty");
 
     for file in files {
-        let img = image::open(file)?;
         if conf.name {
             println!("{}:", file);
         }
 
         match conf.mode {
             ViewMode::Ascii => {
+                let img = image::open(file)?;
                 let art = ascii::convert(&img, actual_width, &char_set, Algorithm::Luminance);
                 let renderer = Ansi {
                     color: conf.color,
@@ -51,7 +68,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
                     transparent: true,
                     ..Default::default()
                 };
-                viuer::print(&img, &vcfg)?;
+                viuer::print_from_file(file, &vcfg)?;
             }
             ViewMode::HalfBlock => {
                 let vcfg = viuer::Config {
@@ -61,7 +78,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
                     transparent: true,
                     ..Default::default()
                 };
-                viuer::print(&img, &vcfg)?;
+                viuer::print_from_file(file, &vcfg)?;
             }
         }
 

@@ -2,6 +2,7 @@ use clap::ArgMatches;
 
 use crate::ascii::Algorithm;
 
+#[derive(Debug)]
 pub enum ViewMode {
     Ascii,
     Image,

@@ -12,4 +12,4 @@ exclude = ["/.github"]
 image = "0.25"
 clap = { version = "4.4", features = ["cargo"] }
 crossterm = "0.27"
-viuer = "0.11"
+viuer = { version = "0.11", features = ["print-file", "sixel"] }
