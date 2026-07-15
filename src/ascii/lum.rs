@@ -36,7 +36,7 @@ mod tests {
     use image::{Rgba, RgbaImage};
 
     fn test_charset() -> Vec<char> {
-        " .:-=+*#%@".chars().collect()
+        crate::ascii::charset::DEFAULT_CHARSET.chars().collect()
     }
 
     #[test]

@@ -21,15 +21,6 @@ fn resolve_width(conf: &Config) -> u32 {
     conf.width
 }
 
-fn ensure_iterm_detection() {
-    if std::env::var("TERM_PROGRAM").is_ok() {
-        return;
-    }
-    if std::env::var("WT_SESSION").is_ok() {
-        std::env::set_var("TERM_PROGRAM", "iTerm");
-    }
-}
-
 fn human_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
     let mut size = bytes as f64;
@@ -100,9 +91,32 @@ fn print_separator() {
     println!("{}", "─".repeat(term_w));
 }
 
+fn viuer_print(
+    file: &str,
+    img: &image::DynamicImage,
+    conf: &Config,
+    actual_width: u32,
+    use_image_protocols: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let vcfg = viuer::Config {
+        width: Some(actual_width),
+        use_kitty: use_image_protocols,
+        use_iterm: use_image_protocols,
+        use_sixel: use_image_protocols,
+        transparent: true,
+        absolute_offset: false,
+        ..Default::default()
+    };
+    if conf.monochrome {
+        viuer::print(img, &vcfg)?;
+    } else {
+        viuer::print_from_file(file, &vcfg)?;
+    }
+    Ok(())
+}
+
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     let actual_width = resolve_width(conf);
-    ensure_iterm_detection();
 
     #[cfg(debug_assertions)]
     eprintln!(
@@ -152,35 +166,8 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
                 };
                 renderer.render(&mut stdout(), &art)?;
             }
-            ViewMode::Image => {
-                let vcfg = viuer::Config {
-                    width: Some(actual_width),
-                    transparent: true,
-                    absolute_offset: false,
-                    ..Default::default()
-                };
-                if conf.monochrome {
-                    viuer::print(&img, &vcfg)?;
-                } else {
-                    viuer::print_from_file(file, &vcfg)?;
-                }
-            }
-            ViewMode::HalfBlock => {
-                let vcfg = viuer::Config {
-                    width: Some(actual_width),
-                    use_kitty: false,
-                    use_iterm: false,
-                    use_sixel: false,
-                    transparent: true,
-                    absolute_offset: false,
-                    ..Default::default()
-                };
-                if conf.monochrome {
-                    viuer::print(&img, &vcfg)?;
-                } else {
-                    viuer::print_from_file(file, &vcfg)?;
-                }
-            }
+            ViewMode::Image => viuer_print(file, &img, conf, actual_width, true)?,
+            ViewMode::HalfBlock => viuer_print(file, &img, conf, actual_width, false)?,
         }
 
         print_footer(file, orig_w, orig_h, &fmt, file_size, conf.info, is_ascii);

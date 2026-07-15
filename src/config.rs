@@ -51,19 +51,6 @@ impl Config {
             info,
         }
     }
-
-    #[cfg(test)]
-    #[allow(unused)]
-    pub fn test_config() -> Self {
-        Config {
-            mode: ViewMode::Ascii,
-            algorithm: Algorithm::Luminance,
-            width: 80,
-            monochrome: false,
-            charset: String::new(),
-            info: false,
-        }
-    }
 }
 
 #[cfg(test)]
