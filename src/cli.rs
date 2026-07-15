@@ -14,9 +14,9 @@ pub fn build_cli() -> Command {
             Arg::new("width")
                 .short('w')
                 .long("width")
-                .default_value("80")
+                .default_value("0")
                 .value_parser(value_parser!(u32))
-                .help("Output width in characters"),
+                .help("Output width in characters (0 = auto, fit terminal)"),
         )
         .arg(
             Arg::new("color")

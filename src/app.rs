@@ -1,9 +1,28 @@
 use crate::ascii::{self, Algorithm};
 use crate::config::{Config, ViewMode};
 use crate::render::{Ansi, Renderer};
+use crossterm::terminal::size;
 use std::io::stdout;
 
+fn resolve_width(conf: &Config) -> u32 {
+    let term_w = size().map(|(w, _)| w as u32).unwrap_or(80);
+
+    if conf.width == 0 {
+        return term_w;
+    }
+    if conf.width > term_w {
+        eprintln!(
+            "warning: width {} exceeds terminal ({}), clamping",
+            conf.width, term_w
+        );
+        return term_w;
+    }
+    conf.width
+}
+
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let actual_width = resolve_width(conf);
+
     let char_set: Vec<char> = if conf.charset.is_empty() {
         ascii::charset::DEFAULT_CHARSET.chars().collect()
     } else {
@@ -19,7 +38,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
 
         match conf.mode {
             ViewMode::Ascii => {
-                let art = ascii::convert(&img, conf.width, &char_set, Algorithm::Luminance);
+                let art = ascii::convert(&img, actual_width, &char_set, Algorithm::Luminance);
                 let renderer = Ansi {
                     color: conf.color,
                     monochrome: conf.monochrome,
@@ -28,7 +47,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
             }
             ViewMode::Image => {
                 let vcfg = viuer::Config {
-                    width: Some(conf.width),
+                    width: Some(actual_width),
                     transparent: true,
                     ..Default::default()
                 };
@@ -36,7 +55,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
             }
             ViewMode::HalfBlock => {
                 let vcfg = viuer::Config {
-                    width: Some(conf.width),
+                    width: Some(actual_width),
                     use_kitty: false,
                     use_iterm: false,
                     transparent: true,
