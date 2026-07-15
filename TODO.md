@@ -11,10 +11,10 @@
 
 ## Medium Priority
 
-- [ ] **分隔线** — 多图之间自动插入分隔线，实时取终端宽度
+- [x] **分隔线** — 多图之间自动插入分隔线，实时取终端宽度
 - [ ] **--algorithm 参数** — 支持 lum / shape 等算法切换
 - [ ] **win glob 展开** — 对位置参数做跨平台 glob（Windows cmd/pwsh 不会自动展开 *.png）
-- [ ] **文件不存在友好提示** — 当前 image::open 直接 panic/error
+- [x] **文件不存在友好提示** — 当前 image::open 直接 panic/error
 
 ## Low Priority
 
