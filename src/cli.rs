@@ -55,6 +55,14 @@ pub fn build_cli() -> Command {
                 .help("Show file info footer after each image"),
         )
         .arg(
+            Arg::new("algorithm")
+                .short('a')
+                .long("algorithm")
+                .default_value("lum")
+                .value_parser(["lum", "lum-clahe"])
+                .help("ASCII algorithm: lum or lum-clahe"),
+        )
+        .arg(
             Arg::new("mode")
                 .short('M')
                 .long("mode")

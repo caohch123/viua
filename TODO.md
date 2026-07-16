@@ -5,10 +5,11 @@
 - [x] 宽度校验 · --mode · stdin 管道 · 信息页脚 · 内联定位
 - [x] --monochrome · 分隔线 · 文件不存在提示
 - [x] 单元测试 29 tests · 代码清理
+- [x] **CLAHE 算法** — `--algorithm lum-clahe` 自适应直方图均衡化预处理
 
 ## Near Term
 
-- [ ] **多算法支持** — 当前仅实现亮度映射，后续扩展：结构相似性匹配（SSIM）、边缘检测 + 方向梯度映射、CLAHE 预处理等
+- [ ] **更多算法** — SSIM 结构匹配、边缘检测 + 方向梯度映射
 - [ ] **win glob 展开** — Windows 不自展 `*.png`
 - [x] **--height 参数** — 与 --width 对称
 

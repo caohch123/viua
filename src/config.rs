@@ -11,7 +11,6 @@ pub enum ViewMode {
 
 pub struct Config {
     pub mode: ViewMode,
-    #[allow(dead_code)]
     pub algorithm: Algorithm,
     pub width: u32,
     pub height: u32,
@@ -26,7 +25,9 @@ pub struct Config {
 impl Config {
     pub fn new(matches: &ArgMatches) -> Self {
         let width = *matches.get_one::<u32>("width").expect("width has default");
-        let height = *matches.get_one::<u32>("height").expect("height has default");
+        let height = *matches
+            .get_one::<u32>("height")
+            .expect("height has default");
         let recursive = matches.get_flag("recursive");
         let monochrome = matches.get_flag("monochrome");
         let charset = matches
@@ -43,12 +44,20 @@ impl Config {
             "ascii" => ViewMode::Ascii,
             _ => ViewMode::Image,
         };
+        let algorithm = match matches
+            .get_one::<String>("algorithm")
+            .map(|s| s.as_str())
+            .unwrap_or("lum")
+        {
+            "lum-clahe" => Algorithm::LuminanceClahe,
+            _ => Algorithm::Luminance,
+        };
         // let output = matches.get_one::<String>("output").cloned();
         // let html = matches.get_one::<String>("html").cloned();
 
         Config {
             mode,
-            algorithm: Algorithm::Luminance,
+            algorithm,
             width,
             height,
             monochrome,

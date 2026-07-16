@@ -1,4 +1,4 @@
-use crate::ascii::{self, Algorithm};
+use crate::ascii::{self};
 use crate::config::{Config, ViewMode};
 use crate::render::{Ansi, Renderer};
 use crossterm::terminal::size;
@@ -6,7 +6,9 @@ use image::GenericImageView;
 use std::io::stdout;
 
 fn resolve_dimensions(conf: &Config, orig_w: u32, orig_h: u32) -> (u32, u32) {
-    let (term_w, _term_h) = size().map(|(w, h)| (w as u32, h as u32)).unwrap_or((80, 24));
+    let (term_w, _term_h) = size()
+        .map(|(w, h)| (w as u32, h as u32))
+        .unwrap_or((80, 24));
     let aspect = orig_h as f64 / orig_w as f64;
 
     let (mut w, mut h) = if conf.width == 0 && conf.height == 0 {
@@ -178,7 +180,7 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
 
         match conf.mode {
             ViewMode::Ascii => {
-                let art = ascii::convert(&img, w, h, &char_set, Algorithm::Luminance);
+                let art = ascii::convert(&img, w, h, &char_set, conf.algorithm);
                 let renderer = Ansi {
                     color: !conf.monochrome,
                     monochrome: conf.monochrome,

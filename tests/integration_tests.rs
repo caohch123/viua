@@ -27,8 +27,7 @@ fn test_convert_camel_ascii() {
         .arg("ascii")
         .arg("-w")
         .arg("40");
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 }
 
 #[test]
@@ -44,8 +43,7 @@ fn test_recursive_directory() {
         .arg("ascii")
         .arg("-w")
         .arg("20");
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 }
 
 #[test]
@@ -56,6 +54,5 @@ fn test_height_resolution() {
         .arg("ascii")
         .arg("-H")
         .arg("10");
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 }

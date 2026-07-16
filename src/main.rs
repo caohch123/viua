@@ -9,8 +9,7 @@ use std::io::{BufRead, IsTerminal};
 
 fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result<()> {
     if dir.is_dir() {
-        let mut entries = std::fs::read_dir(dir)?
-            .collect::<Result<Vec<_>, _>>()?;
+        let mut entries = std::fs::read_dir(dir)?.collect::<Result<Vec<_>, _>>()?;
         entries.sort_by_key(|e| e.path());
         for entry in entries {
             let path = entry.path();
@@ -18,7 +17,11 @@ fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result
                 visit_dirs(&path, files)?;
             } else if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
                 let ext_lower = ext.to_lowercase();
-                if ["png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "tiff", "tga"].contains(&ext_lower.as_str()) {
+                if [
+                    "png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "tiff", "tga",
+                ]
+                .contains(&ext_lower.as_str())
+                {
                     files.push(path.to_string_lossy().to_string());
                 }
             }
@@ -70,7 +73,8 @@ fn main() {
                             if let Err(e) = std::io::copy(&mut reader, &mut temp_file) {
                                 eprintln!("warning: failed to write downloaded file: {}", e);
                             } else {
-                                processed_files.push(temp_file.path().to_string_lossy().to_string());
+                                processed_files
+                                    .push(temp_file.path().to_string_lossy().to_string());
                                 temp_files.push(temp_file);
                             }
                         }
@@ -91,7 +95,10 @@ fn main() {
                         eprintln!("warning: failed to read directory {}: {}", f, e);
                     }
                 } else {
-                    eprintln!("warning: {} is a directory (use -r/--recursive to traverse)", f);
+                    eprintln!(
+                        "warning: {} is a directory (use -r/--recursive to traverse)",
+                        f
+                    );
                 }
             } else {
                 processed_files.push(f);
