@@ -39,6 +39,7 @@ viua <ascii|image|halfblock> [选项] [file]...
 | `-m, --monochrome` | 全模式灰度输出 |
 | `-i, --info` | 图片后显示文件信息页脚 |
 | `-r, --recursive` | 递归遍历目录 |
+| `-1, --once` | GIF 动画只播放一次 |
 
 #### ASCII 子命令
 
@@ -82,6 +83,18 @@ viua -r ./photos
 
 # URL 输入
 viua https://example.com/img.png
+
+# GIF 动图播放（默认循环）
+viua animation.gif
+
+# GIF 动图只播放一次
+viua --once animation.gif
+
+# GIF + 自定义宽度 + 灰度
+viua -w 60 -m --once animation.gif
+
+# GIF 半块字符模式（无图像协议时使用）
+viua halfblock animation.gif
 ```
 
 ### 核心算法（ASCII 模式）
@@ -100,3 +113,4 @@ viua https://example.com/img.png
 | `clap` | CLI 参数解析 |
 | `crossterm` | 终端尺寸检测 / ANSI 颜色 |
 | `viuer` | 原图直显 & 半块字符渲染（Sixel / iTerm2 / Kitty） |
+| `gif` | GIF 解码与帧延迟解析 |
