@@ -16,6 +16,7 @@ viua/
     │   ├── mod.rs       # AsciiPixel, AsciiArt, convert() 按算法分派
     │   ├── lum.rs       # 亮度映射算法
     │   ├── clahe.rs     # CLAHE 自适应直方图均衡化
+    │   ├── sobel.rs     # Sobel 边缘检测算法
     │   └── charset.rs   # 默认字符集
     └── render/
         ├── mod.rs       # Renderer<T> trait
@@ -43,7 +44,7 @@ viua <ascii|image|halfblock> [选项] [file]...
 
 | 参数 | 说明 |
 |------|------|
-| `-a, --algorithm` | 转换算法：`lum`（默认，亮度映射）/ `lum-clahe`（CLAHE 增强） |
+| `-a, --algorithm` | 转换算法：`lum`（默认，亮度映射）/ `lum-clahe`（CLAHE 增强）/ `sobel`（边缘检测） |
 | `-s, --charset` | 字符梯度（默认 ` .:-=+*#%@`） |
 
 ### 使用示例
@@ -57,6 +58,9 @@ viua ascii img.png
 
 # ASCII + CLAHE 增强
 viua ascii -a lum-clahe img.png
+
+# ASCII Sobel 边缘检测
+viua ascii -a sobel img.png
 
 # 半块字符，灰度
 viua halfblock -m img.png
@@ -86,6 +90,7 @@ viua https://example.com/img.png
 |------|------|
 | `lum` | Lanczos3 缩放 → NTSC 亮度 `0.299R+0.587G+0.114B` → 字符映射 |
 | `lum-clahe` | CLAHE 预处理 → 同上 |
+| `sobel` | 灰度 → Sobel Gx/Gy 边缘检测 → 梯度幅值反转 → 字符映射（轮廓风格） |
 
 ### 依赖
 
