@@ -2,7 +2,6 @@ mod app;
 mod ascii;
 mod cli;
 mod config;
-mod glob;
 mod input;
 mod render;
 
