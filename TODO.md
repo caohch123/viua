@@ -9,7 +9,7 @@
 ## Near Term
 
 - [ ] **多算法支持** — 当前仅实现亮度映射，后续扩展：结构相似性匹配（SSIM）、边缘检测 + 方向梯度映射、CLAHE 预处理等
-- [ ] **win glob 展开** — Windows 不自展 `*.png`
+- [x] **win glob 展开** — Windows 不自展 `*.png`
 - [x] **--height 参数** — 与 --width 对称
 
 ## Backlog

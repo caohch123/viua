@@ -5,6 +5,7 @@ mod config;
 mod render;
 
 use config::Config;
+use glob::{glob_with, MatchOptions};
 use std::io::{BufRead, IsTerminal};
 
 fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result<()> {
@@ -25,6 +26,24 @@ fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result
         }
     }
     Ok(())
+}
+
+fn contains_glob_chars(s: &str) -> bool {
+    s.contains('*') || s.contains('?') || s.contains('[')
+}
+
+#[cfg(windows)]
+fn get_glob_options() -> MatchOptions {
+    MatchOptions {
+        case_sensitive: false,
+        require_literal_separator: false,
+        require_literal_leading_dot: false,
+    }
+}
+
+#[cfg(not(windows))]
+fn get_glob_options() -> MatchOptions {
+    MatchOptions::default()
 }
 
 fn main() {
@@ -85,15 +104,57 @@ fn main() {
             }
         } else {
             let path = std::path::Path::new(&f);
-            if path.is_dir() {
-                if conf.recursive {
-                    if let Err(e) = visit_dirs(path, &mut processed_files) {
-                        eprintln!("warning: failed to read directory {}: {}", f, e);
+            if path.exists() {
+                if path.is_dir() {
+                    if conf.recursive {
+                        if let Err(e) = visit_dirs(path, &mut processed_files) {
+                            eprintln!("warning: failed to read directory {}: {}", f, e);
+                        }
+                    } else {
+                        eprintln!("warning: {} is a directory (use -r/--recursive to traverse)", f);
                     }
                 } else {
-                    eprintln!("warning: {} is a directory (use -r/--recursive to traverse)", f);
+                    processed_files.push(f);
+                }
+            } else if contains_glob_chars(&f) {
+                // 路径不存在且包含glob通配符，尝试展开（Windows下cmd/powershell不会自动展开通配符）
+                match glob_with(&f, get_glob_options()) {
+                    Ok(entries) => {
+                        let mut found = false;
+                        for entry in entries {
+                            match entry {
+                                Ok(matched_path) => {
+                                    if matched_path.is_file() {
+                                        processed_files.push(matched_path.to_string_lossy().to_string());
+                                        found = true;
+                                    } else if matched_path.is_dir() {
+                                        if conf.recursive {
+                                            if let Err(e) = visit_dirs(&matched_path, &mut processed_files) {
+                                                eprintln!("warning: failed to read directory {}: {}", matched_path.display(), e);
+                                            }
+                                            found = true;
+                                        } else {
+                                            eprintln!("warning: {} is a directory (use -r/--recursive to traverse)", matched_path.display());
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    eprintln!("warning: failed to process glob entry for {}: {}", f, e);
+                                }
+                            }
+                        }
+                        if !found {
+                            // 没有匹配到任何有效文件，保留原路径以触发文件不存在错误
+                            processed_files.push(f);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("warning: invalid glob pattern '{}': {}", f, e);
+                        processed_files.push(f);
+                    }
                 }
             } else {
+                // 普通不存在的文件，保留原路径触发后续错误提示
                 processed_files.push(f);
             }
         }
