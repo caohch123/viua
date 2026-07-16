@@ -10,7 +10,7 @@
 ## Near Term
 
 - [ ] **更多算法** — SSIM 结构匹配、边缘检测 + 方向梯度映射
-- [ ] **win glob 展开** — Windows 不自展 `*.png`
+- [x] **win glob 展开** — Windows 不自展 `*.png`
 - [x] **--height 参数** — 与 --width 对称
 
 ## Backlog

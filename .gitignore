@@ -1,3 +1,4 @@
 /target
 *.csv
 analyze_contrib.py
+.cargo/

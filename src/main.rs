@@ -7,6 +7,9 @@ mod render;
 use config::{Config, ViewMode};
 use std::io::{BufRead, IsTerminal};
 
+#[cfg(windows)]
+use glob::MatchOptions;
+
 fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result<()> {
     if dir.is_dir() {
         let mut entries = std::fs::read_dir(dir)?.collect::<Result<Vec<_>, _>>()?;
@@ -28,6 +31,26 @@ fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result
         }
     }
     Ok(())
+}
+
+#[allow(dead_code)]
+fn contains_glob_chars(s: &str) -> bool {
+    s.contains('*') || s.contains('?') || s.contains('[')
+}
+
+#[cfg(windows)]
+#[allow(dead_code)]
+fn get_glob_options() -> MatchOptions {
+    MatchOptions {
+        case_sensitive: false,
+        require_literal_separator: false,
+        require_literal_leading_dot: false,
+    }
+}
+
+#[cfg(not(windows))]
+fn get_glob_options() -> MatchOptions {
+    MatchOptions::default()
 }
 
 fn main() {
