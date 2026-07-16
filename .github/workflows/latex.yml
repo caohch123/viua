@@ -1,0 +1,36 @@
+name: Sync Doc Submodule
+
+on:
+  repository_dispatch:
+    types: [doc-updated]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Pull latest submodule
+        run: |
+          git submodule update --init --recursive
+          cd doc
+          git fetch origin
+          git checkout origin/main
+          echo "SUB_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: Commit submodule update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add doc
+          if git diff --staged --quiet; then
+            echo "No update needed"
+          else
+            git commit -m "chore: sync doc submodule to $env:SUB_COMMIT"
+            git push
+          fi
