@@ -18,8 +18,8 @@ pub struct AsciiArt {
     pub lines: Vec<Vec<AsciiPixel>>,
 }
 
-pub fn convert(img: &DynamicImage, new_width: u32, char_set: &[char], algo: Algorithm) -> AsciiArt {
+pub fn convert(img: &DynamicImage, new_width: u32, new_height: u32, char_set: &[char], algo: Algorithm) -> AsciiArt {
     match algo {
-        Algorithm::Luminance => lum::convert(img, new_width, char_set),
+        Algorithm::Luminance => lum::convert(img, new_width, new_height, char_set),
     }
 }

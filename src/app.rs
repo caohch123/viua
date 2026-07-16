@@ -5,20 +5,37 @@ use crossterm::terminal::size;
 use image::GenericImageView;
 use std::io::stdout;
 
-fn resolve_width(conf: &Config) -> u32 {
-    let term_w = size().map(|(w, _)| w as u32).unwrap_or(80);
+fn resolve_dimensions(conf: &Config, orig_w: u32, orig_h: u32) -> (u32, u32) {
+    let (term_w, _term_h) = size().map(|(w, h)| (w as u32, h as u32)).unwrap_or((80, 24));
+    let aspect = orig_h as f64 / orig_w as f64;
 
-    if conf.width == 0 {
-        return term_w;
-    }
-    if conf.width > term_w {
+    let (mut w, mut h) = if conf.width == 0 && conf.height == 0 {
+        let new_w = term_w;
+        let new_h = (new_w as f64 * aspect * 0.5).round() as u32;
+        (new_w, new_h)
+    } else if conf.width > 0 && conf.height == 0 {
+        let new_w = conf.width;
+        let new_h = (new_w as f64 * aspect * 0.5).round() as u32;
+        (new_w, new_h)
+    } else if conf.width == 0 && conf.height > 0 {
+        let new_h = conf.height;
+        let new_w = (new_h as f64 / (aspect * 0.5)).round() as u32;
+        (new_w, new_h)
+    } else {
+        (conf.width, conf.height)
+    };
+
+    if w > term_w {
         eprintln!(
             "warning: width {} exceeds terminal ({}), clamping",
-            conf.width, term_w
+            w, term_w
         );
-        return term_w;
+        let ratio = term_w as f64 / w as f64;
+        w = term_w;
+        h = (h as f64 * ratio).round() as u32;
     }
-    conf.width
+
+    (w.max(1), h.max(1))
 }
 
 fn human_size(bytes: u64) -> String {
@@ -96,10 +113,12 @@ fn viuer_print(
     img: &image::DynamicImage,
     conf: &Config,
     actual_width: u32,
+    actual_height: Option<u32>,
     use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let vcfg = viuer::Config {
         width: Some(actual_width),
+        height: actual_height,
         use_kitty: use_image_protocols,
         use_iterm: use_image_protocols,
         use_sixel: use_image_protocols,
@@ -116,8 +135,6 @@ fn viuer_print(
 }
 
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
-    let actual_width = resolve_width(conf);
-
     #[cfg(debug_assertions)]
     eprintln!(
         "viua: iterm={} sixel={}",
@@ -145,6 +162,8 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
             }
         };
         let (orig_w, orig_h) = img.dimensions();
+        let (w, h) = resolve_dimensions(conf, orig_w, orig_h);
+
         let file_size = std::fs::metadata(file).map(|m| m.len()).unwrap_or(0);
         let fmt = std::path::Path::new(file)
             .extension()
@@ -159,15 +178,29 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
 
         match conf.mode {
             ViewMode::Ascii => {
-                let art = ascii::convert(&img, actual_width, &char_set, Algorithm::Luminance);
+                let art = ascii::convert(&img, w, h, &char_set, Algorithm::Luminance);
                 let renderer = Ansi {
                     color: !conf.monochrome,
                     monochrome: conf.monochrome,
                 };
                 renderer.render(&mut stdout(), &art)?;
             }
-            ViewMode::Image => viuer_print(file, &img, conf, actual_width, true)?,
-            ViewMode::HalfBlock => viuer_print(file, &img, conf, actual_width, false)?,
+            ViewMode::Image => viuer_print(
+                file,
+                &img,
+                conf,
+                w,
+                if conf.height > 0 { Some(h) } else { None },
+                true,
+            )?,
+            ViewMode::HalfBlock => viuer_print(
+                file,
+                &img,
+                conf,
+                w,
+                if conf.height > 0 { Some(h) } else { None },
+                false,
+            )?,
         }
 
         print_footer(file, orig_w, orig_h, &fmt, file_size, conf.info, is_ascii);

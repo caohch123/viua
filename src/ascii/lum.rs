@@ -1,10 +1,7 @@
 use super::{AsciiArt, AsciiPixel};
 use image::{DynamicImage, GenericImageView, Pixel};
 
-pub fn convert(img: &DynamicImage, new_width: u32, char_set: &[char]) -> AsciiArt {
-    let (w, h) = img.dimensions();
-    let aspect = h as f64 / w as f64;
-    let new_height = (new_width as f64 * aspect * 0.5).round() as u32;
+pub fn convert(img: &DynamicImage, new_width: u32, new_height: u32, char_set: &[char]) -> AsciiArt {
     let resized = img.resize_exact(new_width, new_height, image::imageops::Lanczos3);
 
     let mut lines = Vec::new();
@@ -42,7 +39,7 @@ mod tests {
     #[test]
     fn test_convert_output_dimensions() {
         let img = DynamicImage::ImageRgba8(RgbaImage::new(100, 100));
-        let art = convert(&img, 50, &test_charset());
+        let art = convert(&img, 50, 25, &test_charset());
         assert_eq!(art.lines.len(), 25);
         assert_eq!(art.lines[0].len(), 50);
     }
@@ -50,7 +47,7 @@ mod tests {
     #[test]
     fn test_convert_black_to_first_char() {
         let img = DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, Rgba([0, 0, 0, 255])));
-        let art = convert(&img, 10, &test_charset());
+        let art = convert(&img, 10, 5, &test_charset());
         assert_eq!(art.lines[0][0].char, ' ');
     }
 
@@ -58,7 +55,7 @@ mod tests {
     fn test_convert_white_to_last_char() {
         let img =
             DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, Rgba([255, 255, 255, 255])));
-        let art = convert(&img, 10, &test_charset());
+        let art = convert(&img, 10, 5, &test_charset());
         assert_eq!(art.lines[0][0].char, '@');
     }
 
@@ -66,7 +63,7 @@ mod tests {
     fn test_convert_preserves_rgb() {
         let img =
             DynamicImage::ImageRgba8(RgbaImage::from_pixel(10, 10, Rgba([100, 150, 200, 255])));
-        let art = convert(&img, 10, &test_charset());
+        let art = convert(&img, 10, 5, &test_charset());
         let p = &art.lines[0][0];
         assert_eq!(p.r, 100);
         assert_eq!(p.g, 150);
