@@ -4,7 +4,7 @@ mod cli;
 mod config;
 mod render;
 
-use config::Config;
+use config::{Config, ViewMode};
 use std::io::{BufRead, IsTerminal};
 
 fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result<()> {
@@ -32,13 +32,29 @@ fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result
 
 fn main() {
     let matches = cli::build_cli().get_matches();
-    let conf = Config::new(&matches);
 
-    let mut raw_files: Vec<String> = matches
-        .get_many::<String>("file")
-        .unwrap_or_default()
-        .map(|s| s.to_string())
-        .collect();
+    let (mode, sub_matches) = match matches.subcommand() {
+        Some(("ascii", m)) => (ViewMode::Ascii, Some(m)),
+        Some(("image", _)) => (ViewMode::Image, None),
+        Some(("halfblock", _)) => (ViewMode::HalfBlock, None),
+        _ => (ViewMode::Image, None),
+    };
+
+    let conf = Config::new(&matches, mode, sub_matches);
+
+    let mut raw_files: Vec<String> = Vec::new();
+
+    if let Some((_, sub)) = matches.subcommand() {
+        if let Some(files) = sub.get_many::<String>("file") {
+            for f in files {
+                raw_files.push(f.to_string());
+            }
+        }
+    } else if let Some(files) = matches.get_many::<String>("file") {
+        for f in files {
+            raw_files.push(f.to_string());
+        }
+    }
 
     if !std::io::stdin().is_terminal() {
         for line in std::io::stdin().lock().lines().map_while(Result::ok) {

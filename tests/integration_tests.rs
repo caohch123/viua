@@ -22,11 +22,7 @@ fn test_missing_file() {
 #[test]
 fn test_convert_camel_ascii() {
     let mut cmd = Command::cargo_bin("viua").unwrap();
-    cmd.arg("img/camel.png")
-        .arg("-M")
-        .arg("ascii")
-        .arg("-w")
-        .arg("40");
+    cmd.arg("ascii").arg("img/camel.png").arg("-w").arg("40");
     cmd.assert().success();
 }
 
@@ -37,10 +33,9 @@ fn test_recursive_directory() {
     fs::copy("img/camel.png", &img_path).unwrap();
 
     let mut cmd = Command::cargo_bin("viua").unwrap();
-    cmd.arg(dir.path())
+    cmd.arg("ascii")
+        .arg(dir.path())
         .arg("-r")
-        .arg("-M")
-        .arg("ascii")
         .arg("-w")
         .arg("20");
     cmd.assert().success();
@@ -49,10 +44,6 @@ fn test_recursive_directory() {
 #[test]
 fn test_height_resolution() {
     let mut cmd = Command::cargo_bin("viua").unwrap();
-    cmd.arg("img/camel.png")
-        .arg("-M")
-        .arg("ascii")
-        .arg("-H")
-        .arg("10");
+    cmd.arg("ascii").arg("img/camel.png").arg("-H").arg("10");
     cmd.assert().success();
 }

@@ -15,29 +15,36 @@ viua/
     ├── ascii/
     │   ├── mod.rs       # AsciiPixel, AsciiArt, convert() 按算法分派
     │   ├── lum.rs       # 亮度映射算法
+    │   ├── clahe.rs     # CLAHE 自适应直方图均衡化
     │   └── charset.rs   # 默认字符集
     └── render/
         ├── mod.rs       # Renderer<T> trait
         └── ansi.rs      # ANSI truecolor 终端输出
 ```
 
-### 渲染模式
+### 命令行
 
-| 模式 | 说明 | 实现 |
-|------|------|------|
-| **Image**（默认）| 原图直显 | 通过 `viuer`（Sixel / iTerm2 / Kitty 自动检测） |
-| **HalfBlock** | 半块字符 ▄▀ | `viuer` BlockPrinter，强制关闭协议 |
-| **ASCII** | 字符画 | 自研：Lanczos3 缩放 → NTSC 亮度 → 字符映射 |
+```
+viua [全局选项] [file]...              # 默认 image 模式
+viua <ascii|image|halfblock> [选项] [file]...
+```
 
-### CLI 选项
+#### 全局选项
 
 | 参数 | 说明 |
 |------|------|
-| `-M, --mode` | 渲染模式：`image`（默认）/ `ascii` / `halfblock` |
 | `-w, --width` | 输出宽度（0 = 自动适配终端，默认 0） |
+| `-H, --height` | 输出高度（0 = 自动，默认 0） |
 | `-m, --monochrome` | 全模式灰度输出 |
-| `-s, --charset` | ASCII 字符梯度（默认 ` .:-=+*#%@`） |
 | `-i, --info` | 图片后显示文件信息页脚 |
+| `-r, --recursive` | 递归遍历目录 |
+
+#### ASCII 子命令
+
+| 参数 | 说明 |
+|------|------|
+| `-a, --algorithm` | 转换算法：`lum`（默认，亮度映射）/ `lum-clahe`（CLAHE 增强） |
+| `-s, --charset` | 字符梯度（默认 ` .:-=+*#%@`） |
 
 ### 使用示例
 
@@ -46,10 +53,13 @@ viua/
 viua img.png
 
 # ASCII 字符画
-viua -M ascii img.png
+viua ascii img.png
+
+# ASCII + CLAHE 增强
+viua ascii -a lum-clahe img.png
 
 # 半块字符，灰度
-viua -M halfblock -m img.png
+viua halfblock -m img.png
 
 # 指定宽度 + 文件信息页脚
 viua -w 60 -i img.png
@@ -58,15 +68,24 @@ viua -w 60 -i img.png
 viua img1.jpg img2.png
 
 # 自定义字符集
-viua -M ascii -s " .-+*#" img.png
+viua ascii -s " .-+*#" img.png
+
+# 管道输入
+find . -name '*.png' | viua
+
+# 递归遍历目录
+viua -r ./photos
+
+# URL 输入
+viua https://example.com/img.png
 ```
 
 ### 核心算法（ASCII 模式）
 
-1. Lanczos3 缩放（考虑终端字符宽高比 2:1）
-2. NTSC 亮度公式：`0.299R + 0.587G + 0.114B`
-3. 亮度线性映射到字符梯度（暗→亮）
-4. 通过 crossterm 输出 ANSI truecolor
+| 算法 | 说明 |
+|------|------|
+| `lum` | Lanczos3 缩放 → NTSC 亮度 `0.299R+0.587G+0.114B` → 字符映射 |
+| `lum-clahe` | CLAHE 预处理 → 同上 |
 
 ### 依赖
 
