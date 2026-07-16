@@ -1,6 +1,5 @@
 use std::io::{BufRead, IsTerminal};
 
-#[cfg(windows)]
 use glob::MatchOptions;
 
 #[allow(dead_code)]
