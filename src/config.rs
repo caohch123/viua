@@ -18,6 +18,7 @@ pub struct Config {
     pub charset: String,
     pub info: bool,
     pub recursive: bool,
+    pub gif_once: bool,
 }
 
 impl Config {
@@ -29,6 +30,7 @@ impl Config {
         let recursive = matches.get_flag("recursive");
         let monochrome = matches.get_flag("monochrome");
         let info = matches.get_flag("info");
+        let gif_once = matches.get_flag("once");
 
         let (charset, algorithm) = if let Some(am) = ascii_matches {
             let cs = am.get_one::<String>("charset").cloned().unwrap_or_default();
@@ -55,6 +57,7 @@ impl Config {
             charset,
             info,
             recursive,
+            gif_once,
         }
     }
 }

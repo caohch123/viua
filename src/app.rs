@@ -3,7 +3,8 @@ use crate::config::{Config, ViewMode};
 use crate::render::{Ansi, Renderer};
 use crossterm::terminal::size;
 use image::GenericImageView;
-use std::io::stdout;
+use std::io::{stdout, BufReader};
+use std::time::{Duration, Instant};
 
 fn resolve_dimensions(conf: &Config, orig_w: u32, orig_h: u32) -> (u32, u32) {
     let (term_w, _term_h) = size()
@@ -136,6 +137,72 @@ fn viuer_print(
     Ok(())
 }
 
+fn play_gif(
+    file: &str,
+    conf: &Config,
+    actual_width: u32,
+    actual_height: Option<u32>,
+    use_image_protocols: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let file_reader = std::fs::File::open(file)?;
+    let buf_reader = BufReader::new(file_reader);
+    let mut options = gif::DecodeOptions::new();
+    options.set_color_output(gif::ColorOutput::RGBA);
+    let mut decoder = options.read_info(buf_reader)?;
+
+    let repeat = decoder.repeat();
+    let loop_count = match repeat {
+        gif::Repeat::Infinite if conf.gif_once => 1,
+        gif::Repeat::Infinite => usize::MAX,
+        gif::Repeat::Finite(n) => n as usize,
+    };
+
+    let mut frames = Vec::new();
+    while let Some(frame) = decoder.read_next_frame()? {
+        let buf: Vec<u8> = frame.buffer.to_vec();
+        let img = image::RgbaImage::from_raw(frame.width as u32, frame.height as u32, buf)
+            .ok_or("Failed to create RgbaImage from frame buffer")?;
+        frames.push((frame.delay, img));
+    }
+
+    if frames.is_empty() {
+        return Ok(());
+    }
+
+    let vcfg = viuer::Config {
+        width: Some(actual_width),
+        height: actual_height,
+        use_kitty: use_image_protocols,
+        use_iterm: use_image_protocols,
+        use_sixel: use_image_protocols,
+        transparent: true,
+        absolute_offset: false,
+        ..Default::default()
+    };
+
+    for _ in 0..loop_count {
+        let mut frame_start = Instant::now();
+        for (delay, img) in &frames {
+            let delay_ms = if *delay < 2 { 100 } else { *delay as u64 * 10 };
+
+            let dyn_img = image::DynamicImage::ImageRgba8(img.clone());
+            if conf.monochrome {
+                viuer::print(&dyn_img.grayscale(), &vcfg)?;
+            } else {
+                viuer::print(&dyn_img, &vcfg)?;
+            }
+
+            let elapsed = frame_start.elapsed().as_millis() as u64;
+            if elapsed < delay_ms {
+                std::thread::sleep(Duration::from_millis(delay_ms - elapsed));
+            }
+            frame_start = Instant::now();
+        }
+    }
+
+    Ok(())
+}
+
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
     eprintln!(
@@ -187,22 +254,46 @@ pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Er
                 };
                 renderer.render(&mut stdout(), &art)?;
             }
-            ViewMode::Image => viuer_print(
-                file,
-                &img,
-                conf,
-                w,
-                if conf.height > 0 { Some(h) } else { None },
-                true,
-            )?,
-            ViewMode::HalfBlock => viuer_print(
-                file,
-                &img,
-                conf,
-                w,
-                if conf.height > 0 { Some(h) } else { None },
-                false,
-            )?,
+            ViewMode::Image => {
+                if fmt == "GIF" {
+                    play_gif(
+                        file,
+                        conf,
+                        w,
+                        if conf.height > 0 { Some(h) } else { None },
+                        true,
+                    )?;
+                } else {
+                    viuer_print(
+                        file,
+                        &img,
+                        conf,
+                        w,
+                        if conf.height > 0 { Some(h) } else { None },
+                        true,
+                    )?;
+                }
+            }
+            ViewMode::HalfBlock => {
+                if fmt == "GIF" {
+                    play_gif(
+                        file,
+                        conf,
+                        w,
+                        if conf.height > 0 { Some(h) } else { None },
+                        false,
+                    )?;
+                } else {
+                    viuer_print(
+                        file,
+                        &img,
+                        conf,
+                        w,
+                        if conf.height > 0 { Some(h) } else { None },
+                        false,
+                    )?;
+                }
+            }
         }
 
         print_footer(file, orig_w, orig_h, &fmt, file_size, conf.info, is_ascii);

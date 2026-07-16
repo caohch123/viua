@@ -16,7 +16,7 @@
 
 ## Backlog
 
-- [ ] **GIF 动图播放** — viuer 原生支持，加帧循环
+- [x] **GIF 动图播放** — viuer 原生支持，加帧循环
 - [x] **递归目录** `-r` — 直接传入文件夹
 - [x] **URL 输入** — `viua https://...` 下载并显示
 - [x] **集成测试** — e2e golden test

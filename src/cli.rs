@@ -53,6 +53,14 @@ pub fn build_cli() -> Command {
                 .global(true)
                 .help("Show file info footer after each image"),
         )
+        .arg(
+            Arg::new("once")
+                .short('1')
+                .long("once")
+                .action(ArgAction::SetTrue)
+                .global(true)
+                .help("Play GIF animation only once"),
+        )
         .subcommand(
             Command::new("ascii")
                 .about("Convert images to ASCII art")
