@@ -19,4 +19,3 @@
 - [x] **递归目录** `-r` — 直接传入文件夹
 - [x] **URL 输入** — `viua https://...` 下载并显示
 - [x] **集成测试** — e2e golden test
-- [ ] **CI/CD** — GitHub Actions auto test + lint
