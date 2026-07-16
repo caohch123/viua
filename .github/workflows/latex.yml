@@ -1,8 +1,6 @@
 name: Sync Doc Submodule
 
 on:
-  repository_dispatch:
-    types: [doc-updated]
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch:
