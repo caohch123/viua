@@ -8,6 +8,87 @@ mod render;
 use config::{Config, ViewMode};
 use std::io::{BufRead, IsTerminal};
 
+fn collect_files(matches: &clap::ArgMatches) -> Vec<String> {
+    let mut files: Vec<String> = Vec::new();
+
+    if let Some((_, sub)) = matches.subcommand() {
+        if let Some(f) = sub.get_many::<String>("file") {
+            for x in f {
+                files.push(x.to_string());
+            }
+        }
+    } else if let Some(f) = matches.get_many::<String>("file") {
+        for x in f {
+            files.push(x.to_string());
+        }
+    }
+
+    if !std::io::stdin().is_terminal() {
+        for line in std::io::stdin().lock().lines().map_while(Result::ok) {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() {
+                files.push(trimmed.to_string());
+            }
+        }
+    }
+
+    files
+}
+
+fn download_url(url: &str, processed: &mut Vec<String>, _tmp: &mut Vec<tempfile::NamedTempFile>) {
+    println!("Downloading {} ...", url);
+    match ureq::get(url).call() {
+        Ok(response) => {
+            let mut reader = response.into_reader();
+            match tempfile::Builder::new()
+                .prefix("viua_")
+                .suffix(".png")
+                .tempfile()
+            {
+                Ok(mut tmp) => {
+                    if let Err(e) = std::io::copy(&mut reader, &mut tmp) {
+                        eprintln!("warning: failed to write downloaded file: {}", e);
+                    } else {
+                        processed.push(tmp.path().to_string_lossy().to_string());
+                        _tmp.push(tmp);
+                    }
+                }
+                Err(e) => eprintln!("warning: failed to create temporary file: {}", e),
+            }
+        }
+        Err(e) => eprintln!("warning: failed to download URL {}: {}", url, e),
+    }
+}
+
+fn resolve_files(raw: Vec<String>, recursive: bool) -> Vec<String> {
+    let mut processed = Vec::new();
+    let mut _temp_files = Vec::new();
+
+    for f in raw {
+        if f.starts_with("http://") || f.starts_with("https://") {
+            download_url(&f, &mut processed, &mut _temp_files);
+        } else {
+            let path = std::path::Path::new(&f);
+            if path.is_dir() {
+                if recursive {
+                    if let Err(e) = visit_dirs(path, &mut processed) {
+                        eprintln!("warning: failed to read directory {}: {}", f, e);
+                    }
+                } else {
+                    eprintln!(
+                        "warning: {} is a directory (use -r/--recursive to traverse)",
+                        f
+                    );
+                }
+            } else {
+                processed.push(f);
+            }
+        }
+    }
+
+    processed
+}
+
 fn visit_dirs(dir: &std::path::Path, files: &mut Vec<String>) -> std::io::Result<()> {
     if dir.is_dir() {
         let mut entries = std::fs::read_dir(dir)?.collect::<Result<Vec<_>, _>>()?;
@@ -42,93 +123,21 @@ fn main() {
     };
 
     let conf = Config::new(&matches, mode, sub_matches);
-
-    let mut raw_files: Vec<String> = Vec::new();
-
-    if let Some((_, sub)) = matches.subcommand() {
-        if let Some(files) = sub.get_many::<String>("file") {
-            for f in files {
-                raw_files.push(f.to_string());
-            }
-        }
-    } else if let Some(files) = matches.get_many::<String>("file") {
-        for f in files {
-            raw_files.push(f.to_string());
-        }
-    }
-
-    if !std::io::stdin().is_terminal() {
-        for line in std::io::stdin().lock().lines().map_while(Result::ok) {
-            let trimmed = line.trim();
-            if !trimmed.is_empty() {
-                raw_files.push(trimmed.to_string());
-            }
-        }
-    }
+    let raw_files = collect_files(&matches);
 
     if raw_files.is_empty() {
         eprintln!("Error: no image files specified");
         std::process::exit(1);
     }
 
-    let mut processed_files = Vec::new();
-    let mut temp_files = Vec::new();
+    let files = resolve_files(raw_files, conf.recursive);
 
-    for f in raw_files {
-        let is_url = f.starts_with("http://") || f.starts_with("https://");
-        if is_url {
-            println!("Downloading {} ...", f);
-            match ureq::get(&f).call() {
-                Ok(response) => {
-                    let mut reader = response.into_reader();
-                    let temp_res = tempfile::Builder::new()
-                        .prefix("viua_")
-                        .suffix(".png")
-                        .tempfile();
-                    match temp_res {
-                        Ok(mut temp_file) => {
-                            if let Err(e) = std::io::copy(&mut reader, &mut temp_file) {
-                                eprintln!("warning: failed to write downloaded file: {}", e);
-                            } else {
-                                processed_files
-                                    .push(temp_file.path().to_string_lossy().to_string());
-                                temp_files.push(temp_file);
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("warning: failed to create temporary file: {}", e);
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("warning: failed to download URL {}: {}", f, e);
-                }
-            }
-        } else {
-            let path = std::path::Path::new(&f);
-            if path.is_dir() {
-                if conf.recursive {
-                    if let Err(e) = visit_dirs(path, &mut processed_files) {
-                        eprintln!("warning: failed to read directory {}: {}", f, e);
-                    }
-                } else {
-                    eprintln!(
-                        "warning: {} is a directory (use -r/--recursive to traverse)",
-                        f
-                    );
-                }
-            } else {
-                processed_files.push(f);
-            }
-        }
-    }
-
-    if processed_files.is_empty() {
+    if files.is_empty() {
         eprintln!("Error: no valid image files found to process");
         std::process::exit(1);
     }
 
-    if let Err(e) = app::run(&conf, &processed_files) {
+    if let Err(e) = app::run(&conf, &files) {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
