@@ -19,6 +19,21 @@ pub fn build_cli() -> Command {
                 .help("Output width in characters (0 = auto, fit terminal)"),
         )
         .arg(
+            Arg::new("height")
+                .short('H')
+                .long("height")
+                .default_value("0")
+                .value_parser(value_parser!(u32))
+                .help("Output height in characters (0 = auto)"),
+        )
+        .arg(
+            Arg::new("recursive")
+                .short('r')
+                .long("recursive")
+                .action(ArgAction::SetTrue)
+                .help("Recursively traverse directories"),
+        )
+        .arg(
             Arg::new("monochrome")
                 .short('m')
                 .long("monochrome")
@@ -121,5 +136,23 @@ mod tests {
             .map(|s| s.as_str())
             .collect();
         assert_eq!(files, vec!["a.png", "b.png", "c.jpg"]);
+    }
+
+    #[test]
+    fn test_default_height() {
+        let m = parse(&["viua", "img.png"]);
+        assert_eq!(*m.get_one::<u32>("height").unwrap(), 0);
+    }
+
+    #[test]
+    fn test_height_flag() {
+        let m = parse(&["viua", "-H", "40", "img.png"]);
+        assert_eq!(*m.get_one::<u32>("height").unwrap(), 40);
+    }
+
+    #[test]
+    fn test_recursive_flag() {
+        let m = parse(&["viua", "-r", "img.png"]);
+        assert!(m.get_flag("recursive"));
     }
 }

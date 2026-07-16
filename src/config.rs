@@ -14,9 +14,11 @@ pub struct Config {
     #[allow(dead_code)]
     pub algorithm: Algorithm,
     pub width: u32,
+    pub height: u32,
     pub monochrome: bool,
     pub charset: String,
     pub info: bool,
+    pub recursive: bool,
     // pub output: Option<String>,
     // pub html: Option<String>,
 }
@@ -24,6 +26,8 @@ pub struct Config {
 impl Config {
     pub fn new(matches: &ArgMatches) -> Self {
         let width = *matches.get_one::<u32>("width").expect("width has default");
+        let height = *matches.get_one::<u32>("height").expect("height has default");
+        let recursive = matches.get_flag("recursive");
         let monochrome = matches.get_flag("monochrome");
         let charset = matches
             .get_one::<String>("charset")
@@ -46,9 +50,11 @@ impl Config {
             mode,
             algorithm: Algorithm::Luminance,
             width,
+            height,
             monochrome,
             charset,
             info,
+            recursive,
         }
     }
 }
@@ -68,8 +74,10 @@ mod tests {
         let conf = parse_config(&["viua", "img.png"]);
         assert!(matches!(conf.mode, ViewMode::Image));
         assert_eq!(conf.width, 0);
+        assert_eq!(conf.height, 0);
         assert!(!conf.monochrome);
         assert!(!conf.info);
+        assert!(!conf.recursive);
         assert_eq!(conf.charset, " .:-=+*#%@");
     }
 
@@ -101,6 +109,18 @@ mod tests {
     fn test_width_custom() {
         let conf = parse_config(&["viua", "-w", "60", "img.png"]);
         assert_eq!(conf.width, 60);
+    }
+
+    #[test]
+    fn test_height_custom() {
+        let conf = parse_config(&["viua", "-H", "40", "img.png"]);
+        assert_eq!(conf.height, 40);
+    }
+
+    #[test]
+    fn test_recursive() {
+        let conf = parse_config(&["viua", "-r", "img.png"]);
+        assert!(conf.recursive);
     }
 
     #[test]
