@@ -1,6 +1,7 @@
 pub mod charset;
 pub mod clahe;
 pub mod lum;
+pub mod sobel;
 
 use image::DynamicImage;
 
@@ -8,6 +9,7 @@ use image::DynamicImage;
 pub enum Algorithm {
     Luminance,
     LuminanceClahe,
+    Sobel,
 }
 
 pub struct AsciiPixel {
@@ -28,9 +30,14 @@ pub fn convert(
     char_set: &[char],
     algo: Algorithm,
 ) -> AsciiArt {
-    let img = match algo {
-        Algorithm::Luminance => img.clone(),
-        Algorithm::LuminanceClahe => clahe::apply(img, 8, 2.0),
-    };
-    lum::convert(&img, new_width, new_height, char_set)
+    match algo {
+        Algorithm::Sobel => sobel::convert(img, new_width, new_height, char_set),
+        _ => {
+            let img = match algo {
+                Algorithm::LuminanceClahe => clahe::apply(img, 8, 2.0),
+                _ => img.clone(),
+            };
+            lum::convert(&img, new_width, new_height, char_set)
+        }
+    }
 }

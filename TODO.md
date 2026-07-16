@@ -6,10 +6,11 @@
 - [x] --monochrome · 分隔线 · 文件不存在提示
 - [x] 单元测试 29 tests · 代码清理
 - [x] **CLAHE 算法** — `--algorithm lum-clahe` 自适应直方图均衡化预处理
+- [x] **Sobel 边缘检测** — `--algorithm sobel` 轮廓风格 ASCII 字符画
 
 ## Near Term
 
-- [ ] **更多算法** — SSIM 结构匹配、边缘检测 + 方向梯度映射
+- [ ] **更多算法** — SSIM 结构匹配、方向梯度映射
 - [x] **win glob 展开** — Windows 不自展 `*.png`
 - [x] **--height 参数** — 与 --width 对称
 

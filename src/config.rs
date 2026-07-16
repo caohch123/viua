@@ -38,6 +38,7 @@ impl Config {
                 .unwrap_or("lum")
             {
                 "lum-clahe" => Algorithm::LuminanceClahe,
+                "sobel" => Algorithm::Sobel,
                 _ => Algorithm::Luminance,
             };
             (cs, algo)
@@ -108,6 +109,16 @@ mod tests {
         let (_, sub) = m.subcommand().unwrap();
         let conf = Config::new(&m, ViewMode::Ascii, Some(sub));
         assert_eq!(conf.charset, " .-+#");
+    }
+
+    #[test]
+    fn test_ascii_algorithm_sobel() {
+        let m = cli::build_cli()
+            .try_get_matches_from(["viua", "ascii", "-a", "sobel", "img.png"])
+            .unwrap();
+        let (_, sub) = m.subcommand().unwrap();
+        let conf = Config::new(&m, ViewMode::Ascii, Some(sub));
+        assert!(matches!(conf.algorithm, Algorithm::Sobel));
     }
 
     #[test]

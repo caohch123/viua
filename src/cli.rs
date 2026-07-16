@@ -66,8 +66,8 @@ pub fn build_cli() -> Command {
                         .short('a')
                         .long("algorithm")
                         .default_value("lum")
-                        .value_parser(["lum", "lum-clahe"])
-                        .help("Conversion algorithm: lum or lum-clahe"),
+                        .value_parser(["lum", "lum-clahe", "sobel"])
+                        .help("Conversion algorithm: lum, lum-clahe, or sobel"),
                 )
                 .arg(
                     Arg::new("charset")
@@ -100,7 +100,8 @@ pub fn build_cli() -> Command {
              viua img.png                        Display image (default)\n  \
              viua -w 60 -i img.png               Custom width + info footer\n  \
              viua ascii img.png                  Convert to ASCII art\n  \
-             viua ascii -a lum-clahe img.png     ASCII with CLAHE enhancement\n  \
+              viua ascii -a lum-clahe img.png     ASCII with CLAHE enhancement\n  \
+              viua ascii -a sobel img.png       ASCII with Sobel edge detection\n  \
              viua halfblock -m img.png           Half-block, grayscale\n  \
              find . -name '*.png' | viua ascii   Pipe filenames from stdin",
         )
@@ -143,6 +144,15 @@ mod tests {
             .try_get_matches_from(["viua", "image", "img.png"])
             .unwrap();
         assert_eq!(m.subcommand().unwrap().0, "image");
+    }
+
+    #[test]
+    fn test_ascii_algorithm_sobel() {
+        let m = build_cli()
+            .try_get_matches_from(["viua", "ascii", "-a", "sobel", "img.png"])
+            .unwrap();
+        let (_, sub) = m.subcommand().unwrap();
+        assert_eq!(sub.get_one::<String>("algorithm").unwrap(), "sobel");
     }
 
     #[test]
