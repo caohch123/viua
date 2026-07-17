@@ -117,25 +117,17 @@ fn viuer_print(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    #[cfg(any(feature = "sixel", feature = "icy_sixel"))] use_image_protocols: bool,
-    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))] _use_image_protocols: bool,
+    use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
         use_kitty: use_image_protocols,
         use_iterm: use_image_protocols,
+        #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
         use_sixel: use_image_protocols,
         transparent: true,
         absolute_offset: false,
-        ..Default::default()
-    };
-    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))]
-    let vcfg = viuer::Config {
-        width: Some(actual_width),
-        height: actual_height,
-        truecolor: true,
         ..Default::default()
     };
     if conf.monochrome {
@@ -151,8 +143,7 @@ fn play_gif(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    #[cfg(any(feature = "sixel", feature = "icy_sixel"))] use_image_protocols: bool,
-    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))] _use_image_protocols: bool,
+    use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let file_reader = std::fs::File::open(file)?;
     let buf_reader = BufReader::new(file_reader);
@@ -179,22 +170,15 @@ fn play_gif(
         return Ok(());
     }
 
-    #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
         use_kitty: use_image_protocols,
         use_iterm: use_image_protocols,
+        #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
         use_sixel: use_image_protocols,
         transparent: true,
         absolute_offset: false,
-        ..Default::default()
-    };
-    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))]
-    let vcfg = viuer::Config {
-        width: Some(actual_width),
-        height: actual_height,
-        truecolor: true,
         ..Default::default()
     };
 
