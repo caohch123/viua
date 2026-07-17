@@ -46,10 +46,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
-            TARGET: x86_64-apple-darwin
-            CROSS: false
-
           - os: macos-latest
             TARGET: aarch64-apple-darwin
             CROSS: false
