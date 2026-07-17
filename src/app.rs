@@ -117,12 +117,16 @@ fn viuer_print(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    _use_image_protocols: bool,
+    use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
-        truecolor: true,
+        use_kitty: use_image_protocols,
+        use_iterm: use_image_protocols,
+        use_sixel: use_image_protocols,
+        transparent: true,
+        absolute_offset: false,
         ..Default::default()
     };
     if conf.monochrome {
@@ -138,7 +142,7 @@ fn play_gif(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    _use_image_protocols: bool,
+    use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let file_reader = std::fs::File::open(file)?;
     let buf_reader = BufReader::new(file_reader);
@@ -168,7 +172,11 @@ fn play_gif(
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
-        truecolor: true,
+        use_kitty: use_image_protocols,
+        use_iterm: use_image_protocols,
+        use_sixel: use_image_protocols,
+        transparent: true,
+        absolute_offset: false,
         ..Default::default()
     };
 
@@ -197,7 +205,11 @@ fn play_gif(
 
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
-    eprintln!("viua: iterm={}", viuer::is_iterm_supported());
+    eprintln!(
+        "viua: iterm={} sixel={}",
+        viuer::is_iterm_supported(),
+        viuer::is_sixel_supported()
+    );
 
     let char_set: Vec<char> = if conf.charset.is_empty() {
         ascii::charset::DEFAULT_CHARSET.chars().collect()
