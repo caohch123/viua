@@ -117,10 +117,10 @@ fn viuer_print(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    #[cfg(feature = "sixel")] use_image_protocols: bool,
-    #[cfg(not(feature = "sixel"))] _use_image_protocols: bool,
+    #[cfg(any(feature = "sixel", feature = "icy_sixel"))] use_image_protocols: bool,
+    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))] _use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    #[cfg(feature = "sixel")]
+    #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
@@ -131,7 +131,7 @@ fn viuer_print(
         absolute_offset: false,
         ..Default::default()
     };
-    #[cfg(not(feature = "sixel"))]
+    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
@@ -151,8 +151,8 @@ fn play_gif(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    #[cfg(feature = "sixel")] use_image_protocols: bool,
-    #[cfg(not(feature = "sixel"))] _use_image_protocols: bool,
+    #[cfg(any(feature = "sixel", feature = "icy_sixel"))] use_image_protocols: bool,
+    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))] _use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let file_reader = std::fs::File::open(file)?;
     let buf_reader = BufReader::new(file_reader);
@@ -179,7 +179,7 @@ fn play_gif(
         return Ok(());
     }
 
-    #[cfg(feature = "sixel")]
+    #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
@@ -190,7 +190,7 @@ fn play_gif(
         absolute_offset: false,
         ..Default::default()
     };
-    #[cfg(not(feature = "sixel"))]
+    #[cfg(not(any(feature = "sixel", feature = "icy_sixel")))]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,

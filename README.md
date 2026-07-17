@@ -1,6 +1,6 @@
 ## viua — 终端图片查看器
 
-将图片转换为 ASCII 字符画或直接显示原图到终端。默认使用半块字符/truecolor 渲染，可选启用 Sixel/iTerm2/Kitty 图像协议。
+将图片转换为 ASCII 字符画或直接显示原图到终端。默认使用半块字符/truecolor 渲染；通过可选 feature 可启用 Sixel/iTerm2/Kitty 图像协议。
 
 ### 项目结构
 
@@ -112,7 +112,7 @@ viua halfblock animation.gif
 | `image` | 图片解码与缩放 |
 | `clap` | CLI 参数解析 |
 | `crossterm` | 终端尺寸检测 / ANSI 颜色 |
-| `viuer` | 原图直显 & 半块字符渲染（可选 feature `sixel` 启用 Sixel 协议） |
+| `viuer` | 原图直显 & 半块字符渲染（可选 feature `icy_sixel` / `sixel` 启用 Sixel 协议） |
 | `gif` | GIF 解码与帧延迟解析 |
 
 ### 编译安装
@@ -121,6 +121,11 @@ viua halfblock animation.gif
 # 默认编译（半块字符 / truecolor 渲染）
 cargo build --release
 
-# 启用 Sixel 协议支持（需要 autotools 编译依赖）
+# 启用 Sixel 协议 — icy_sixel（纯 Rust，无需编译依赖，推荐）
+cargo build --release --features icy_sixel
+
+# 启用 Sixel 协议 — sixel（C 库实现，需要 autotools）
 cargo build --release --features sixel
 ```
+
+> **注意**：在 Windows Terminal 等支持 Sixel 协议的终端中，启用 `icy_sixel` 或 `sixel` 可获得更快的原图显示速度。默认的半块字符模式兼容性最好但渲染较慢。
