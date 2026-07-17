@@ -55,6 +55,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install macOS build tools
+        if: ${{ ! matrix.CROSS && runner.os == 'macOS' }}
+        run: brew install autoconf automake libtool
+
       - name: Build binary (native)
         if: ${{ ! matrix.CROSS }}
         uses: dtolnay/rust-toolchain@stable
