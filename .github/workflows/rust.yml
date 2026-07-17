@@ -17,10 +17,6 @@ jobs:
         with:
           components: clippy, rustfmt
       - uses: actions/checkout@v6
-      - name: Install build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autoconf automake libtool libsixel-dev
       - name: Format
         run: cargo fmt --all -- --check
       - name: Lint
@@ -40,17 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-
-      - name: Install build tools (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autoconf automake libtool libsixel-dev
-
-      - name: Install build tools (macOS)
-        if: runner.os == 'macOS'
-        run: brew install autoconf automake libtool libsixel
-
       - name: Check compilation
         run: cargo check
 
@@ -72,41 +57,27 @@ jobs:
           - os: ubuntu-latest
             TARGET: x86_64-unknown-linux-musl
             CROSS: true
-            CROSS_ARGS: ""
 
           - os: ubuntu-latest
             TARGET: aarch64-unknown-linux-musl
             CROSS: true
-            CROSS_ARGS: ""
 
           - os: windows-latest
             TARGET: x86_64-pc-windows-msvc
             CROSS: true
-            CROSS_ARGS: ""
             EXTENSION: .exe
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install build tools (macOS)
-        if: ${{ ! matrix.CROSS && runner.os == 'macOS' }}
-        run: brew install autoconf automake libtool libsixel
-
-      - name: Setup Rust (native)
+      - name: Build binary (native)
         if: ${{ ! matrix.CROSS }}
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.TARGET }}
-
       - name: Build binary (native)
         if: ${{ ! matrix.CROSS }}
         run: cargo build --release --target ${{ matrix.TARGET }}
-
-      - name: Install build tools (Linux cross)
-        if: ${{ matrix.CROSS && runner.os == 'Linux' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autoconf automake libtool libsixel-dev
 
       - name: Build binary (cross)
         if: ${{ matrix.CROSS }}
@@ -114,7 +85,7 @@ jobs:
         with:
           command: build
           target: ${{ matrix.TARGET }}
-          args: "--release ${{ matrix.CROSS_ARGS }}"
+          args: "--release"
 
       - name: Archive binary
         shell: bash

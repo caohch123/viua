@@ -117,8 +117,10 @@ fn viuer_print(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    use_image_protocols: bool,
+    #[cfg(feature = "sixel")] use_image_protocols: bool,
+    #[cfg(not(feature = "sixel"))] _use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(feature = "sixel")]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
@@ -127,6 +129,13 @@ fn viuer_print(
         use_sixel: use_image_protocols,
         transparent: true,
         absolute_offset: false,
+        ..Default::default()
+    };
+    #[cfg(not(feature = "sixel"))]
+    let vcfg = viuer::Config {
+        width: Some(actual_width),
+        height: actual_height,
+        truecolor: true,
         ..Default::default()
     };
     if conf.monochrome {
@@ -142,7 +151,8 @@ fn play_gif(
     conf: &Config,
     actual_width: u32,
     actual_height: Option<u32>,
-    use_image_protocols: bool,
+    #[cfg(feature = "sixel")] use_image_protocols: bool,
+    #[cfg(not(feature = "sixel"))] _use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let file_reader = std::fs::File::open(file)?;
     let buf_reader = BufReader::new(file_reader);
@@ -169,6 +179,7 @@ fn play_gif(
         return Ok(());
     }
 
+    #[cfg(feature = "sixel")]
     let vcfg = viuer::Config {
         width: Some(actual_width),
         height: actual_height,
@@ -177,6 +188,13 @@ fn play_gif(
         use_sixel: use_image_protocols,
         transparent: true,
         absolute_offset: false,
+        ..Default::default()
+    };
+    #[cfg(not(feature = "sixel"))]
+    let vcfg = viuer::Config {
+        width: Some(actual_width),
+        height: actual_height,
+        truecolor: true,
         ..Default::default()
     };
 
@@ -204,12 +222,14 @@ fn play_gif(
 }
 
 pub fn run(conf: &Config, files: &[String]) -> Result<(), Box<dyn std::error::Error>> {
-    #[cfg(debug_assertions)]
+    #[cfg(all(debug_assertions, feature = "sixel"))]
     eprintln!(
         "viua: iterm={} sixel={}",
         viuer::is_iterm_supported(),
         viuer::is_sixel_supported()
     );
+    #[cfg(all(debug_assertions, not(feature = "sixel")))]
+    eprintln!("viua: iterm={}", viuer::is_iterm_supported());
 
     let char_set: Vec<char> = if conf.charset.is_empty() {
         ascii::charset::DEFAULT_CHARSET.chars().collect()
