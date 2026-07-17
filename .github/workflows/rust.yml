@@ -31,25 +31,41 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-13
             TARGET: x86_64-apple-darwin
+            CROSS: false
 
           - os: macos-latest
             TARGET: aarch64-apple-darwin
+            CROSS: false
 
           - os: ubuntu-latest
             TARGET: x86_64-unknown-linux-musl
+            CROSS: true
 
           - os: ubuntu-latest
             TARGET: aarch64-unknown-linux-musl
+            CROSS: true
 
           - os: windows-latest
             TARGET: x86_64-pc-windows-msvc
+            CROSS: true
             EXTENSION: .exe
 
     steps:
       - uses: actions/checkout@v6
-      - name: Build binary
+
+      - name: Build binary (native)
+        if: ${{ ! matrix.CROSS }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.TARGET }}
+      - name: Build binary (native)
+        if: ${{ ! matrix.CROSS }}
+        run: cargo build --release --target ${{ matrix.TARGET }}
+
+      - name: Build binary (cross)
+        if: ${{ matrix.CROSS }}
         uses: houseabsolute/actions-rust-cross@v1
         with:
           command: build
