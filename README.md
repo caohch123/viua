@@ -97,6 +97,14 @@ viua -w 60 -m --once animation.gif
 viua halfblock animation.gif
 ```
 
+### GIF 播放
+
+- 帧解码使用 `image` 的 `GifDecoder`，自动完成局部帧合成（偏移 / disposal method），优化过的 GIF 不会花屏。
+- 动画原地刷新播放：每帧打印后光标回卷覆盖上一帧，不刷屏、不占用滚动缓冲区。
+- 播放尺寸自动钳制在终端高度以内（预留 1 行），超出时按比例缩小宽度。
+- Sixel 终端下 GIF 强制回退半块字符播放（sixel 按假定字符格渲染，逐帧回卷会错位且编码慢）；静态图不受影响。
+- 循环次数遵循 GIF 元数据（Netscape 扩展）；`--once` 强制只播放一次。
+
 ### 核心算法（ASCII 模式）
 
 | 算法 | 说明 |
@@ -109,11 +117,11 @@ viua halfblock animation.gif
 
 | crate | 用途 |
 |-------|------|
-| `image` | 图片解码与缩放 |
+| `image` | 图片解码与缩放；GIF 帧解码与合成 |
 | `clap` | CLI 参数解析 |
-| `crossterm` | 终端尺寸检测 / ANSI 颜色 |
+| `crossterm` | 终端尺寸检测 / 光标控制 / ANSI 颜色 |
 | `viuer` | 原图直显（Kitty / iTerm2 / 半块字符；可选 feature `icy_sixel` / `sixel` 启用 Sixel） |
-| `gif` | GIF 解码与帧延迟解析 |
+| `gif` | GIF 循环次数（Netscape 扩展）解析 |
 
 ### 编译安装
 

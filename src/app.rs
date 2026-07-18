@@ -2,7 +2,9 @@ use crate::ascii::{self};
 use crate::config::{Config, ViewMode};
 use crate::render::{Ansi, Renderer};
 use crossterm::terminal::size;
-use image::GenericImageView;
+use crossterm::{cursor, execute};
+use image::codecs::gif::GifDecoder;
+use image::{AnimationDecoder, GenericImageView};
 use std::io::{stdout, BufReader};
 use std::time::{Duration, Instant};
 
@@ -145,60 +147,83 @@ fn play_gif(
     actual_height: Option<u32>,
     use_image_protocols: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let file_reader = std::fs::File::open(file)?;
-    let buf_reader = BufReader::new(file_reader);
-    let mut options = gif::DecodeOptions::new();
-    options.set_color_output(gif::ColorOutput::RGBA);
-    let mut decoder = options.read_info(buf_reader)?;
-
-    let repeat = decoder.repeat();
+    let repeat = {
+        let file_reader = std::fs::File::open(file)?;
+        let mut options = gif::DecodeOptions::new();
+        options.set_color_output(gif::ColorOutput::RGBA);
+        let decoder = options.read_info(BufReader::new(file_reader))?;
+        decoder.repeat()
+    };
     let loop_count = match repeat {
         gif::Repeat::Infinite if conf.gif_once => 1,
         gif::Repeat::Infinite => usize::MAX,
         gif::Repeat::Finite(n) => n as usize,
     };
 
-    let mut frames = Vec::new();
-    while let Some(frame) = decoder.read_next_frame()? {
-        let buf: Vec<u8> = frame.buffer.to_vec();
-        let img = image::RgbaImage::from_raw(frame.width as u32, frame.height as u32, buf)
-            .ok_or("Failed to create RgbaImage from frame buffer")?;
-        frames.push((frame.delay, img));
-    }
+    let file_reader = std::fs::File::open(file)?;
+    let frames: Vec<(u64, image::RgbaImage)> = GifDecoder::new(BufReader::new(file_reader))?
+        .into_frames()
+        .collect_frames()?
+        .into_iter()
+        .map(|f| {
+            let delay = Duration::from(f.delay()).as_millis() as u64;
+            let delay_ms = if delay < 20 { 100 } else { delay };
+            (delay_ms, f.into_buffer())
+        })
+        .collect();
 
     if frames.is_empty() {
         return Ok(());
     }
 
+    let (frame_w, frame_h) = frames[0].1.dimensions();
+    let (term_w, term_h) = size()
+        .map(|(w, h)| (w as u32, h as u32))
+        .unwrap_or((80, 24));
+    let mut width = actual_width.min(term_w).max(1);
+    let mut height = actual_height
+        .unwrap_or_else(|| {
+            (width as f64 * frame_h as f64 / frame_w as f64 * 0.5).round() as u32
+        })
+        .max(1);
+    let max_h = term_h.saturating_sub(1).max(1);
+    if height > max_h {
+        width = ((width as f64 * max_h as f64 / height as f64).round() as u32).max(1);
+        height = max_h;
+    }
+
     let vcfg = viuer::Config {
-        width: Some(actual_width),
-        height: actual_height,
+        width: Some(width),
+        height: Some(height),
         use_kitty: use_image_protocols,
         use_iterm: use_image_protocols,
         #[cfg(any(feature = "sixel", feature = "icy_sixel"))]
-        use_sixel: use_image_protocols,
+        use_sixel: false,
         transparent: true,
         absolute_offset: false,
         ..Default::default()
     };
 
-    for _ in 0..loop_count {
+    for loop_i in 0..loop_count {
         let mut frame_start = Instant::now();
-        for (delay, img) in &frames {
-            let delay_ms = if *delay < 2 { 100 } else { *delay as u64 * 10 };
-
+        for (frame_i, (delay_ms, img)) in frames.iter().enumerate() {
             let dyn_img = image::DynamicImage::ImageRgba8(img.clone());
-            if conf.monochrome {
-                viuer::print(&dyn_img.grayscale(), &vcfg)?;
+            let (_print_w, print_h) = if conf.monochrome {
+                viuer::print(&dyn_img.grayscale(), &vcfg)?
             } else {
-                viuer::print(&dyn_img, &vcfg)?;
-            }
+                viuer::print(&dyn_img, &vcfg)?
+            };
 
             let elapsed = frame_start.elapsed().as_millis() as u64;
-            if elapsed < delay_ms {
+            if elapsed < *delay_ms {
                 std::thread::sleep(Duration::from_millis(delay_ms - elapsed));
             }
             frame_start = Instant::now();
+
+            let is_last = loop_i + 1 == loop_count && frame_i + 1 == frames.len();
+            if !is_last {
+                execute!(stdout(), cursor::MoveUp(print_h as u16))?;
+            }
         }
     }
 
