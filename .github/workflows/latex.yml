@@ -5,26 +5,27 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-submodule:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
 
       - name: Pull latest submodule
         run: |
-          git submodule update --init --recursive
           cd doc
           git fetch origin
           git checkout origin/main
-          echo "SUB_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "SUB_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Commit submodule update
         run: |
-          cd "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add doc
@@ -33,8 +34,11 @@ jobs:
           else
             git commit -m "chore: sync doc submodule to ${SUB_COMMIT}"
             for i in $(seq 1 5); do
-              git pull --rebase origin main && git push origin main && exit 0
+              if git pull --rebase origin main && git push origin main; then
+                exit 0
+              fi
               echo "Push failed (attempt $i), retrying in 5s..."
+              git rebase --abort || true
               sleep 5
             done
             echo "Push failed after 5 retries"
