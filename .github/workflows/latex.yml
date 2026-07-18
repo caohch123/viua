@@ -30,5 +30,6 @@ jobs:
             echo "No update needed"
           else
             git commit -m "chore: sync doc submodule to $env:SUB_COMMIT"
+            git pull --rebase origin main
             git push
           fi
