@@ -182,9 +182,7 @@ fn play_gif(
         .unwrap_or((80, 24));
     let mut width = actual_width.min(term_w).max(1);
     let mut height = actual_height
-        .unwrap_or_else(|| {
-            (width as f64 * frame_h as f64 / frame_w as f64 * 0.5).round() as u32
-        })
+        .unwrap_or_else(|| (width as f64 * frame_h as f64 / frame_w as f64 * 0.5).round() as u32)
         .max(1);
     let max_h = term_h.saturating_sub(1).max(1);
     if height > max_h {
